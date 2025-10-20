@@ -1,0 +1,11 @@
+[project]
+name = "Polyboard_Backend"
+version = "0.1.0"
+description = "This is the FastAPI backend for Polyboard, the interlingual whiteboard."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.119.0",
+    "pydantic>=2.12.3",
+    "uvicorn>=0.37.0",
+]
