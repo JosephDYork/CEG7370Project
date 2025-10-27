@@ -1,0 +1,46 @@
+.whiteboard-container {
+  position: relative;
+  border: black 1px solid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+/* 
+Pop out the canvas and round the corners for a
+more rounded kinda style here.
+TODO: Ensure this isn't distorting the canvas lines
+*/
+.whiteboard-canvas {
+  width: 97%;
+  height: 97%;
+  margin: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Use absolute positioning to overlay the buttons on top of the whiteboard.
+For some reason 50% didn't look right, 42.5 puts us roughly in the center */
+.button-container {
+  position: absolute;
+  top: 2.5%;
+  left: 42.5%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+}
+
+.color-picker {
+  margin-right: 5px;
+  height: 32px;
+  width: 38px;
+}
+
+.whiteboard-button {
+  margin-right: 5px;
+}
+
+.clear-button-icon {
+  padding: 3px 1px 1px 1px;
+}

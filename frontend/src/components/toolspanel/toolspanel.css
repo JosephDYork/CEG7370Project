@@ -1,0 +1,5 @@
+.toolspanel-container {
+  border: black 1px solid;
+  display: flex;
+  flex-direction: column;
+}

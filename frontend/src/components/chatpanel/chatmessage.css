@@ -1,0 +1,71 @@
+.chatmessage-container {
+  padding: 0.3rem 0.5rem;
+  word-wrap: break-word;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+}
+
+/* This is the best I could match to the design Margish provided,
+I changed the color slightly cause I think it looks better
+change these back to light green if you disagree */
+.message-bubble {
+  background: #e6fffa;
+  border-radius: 12px;
+  border-left: 3px solid #14b8a6;
+  padding: 0.5rem;
+  margin: 0 0.25rem;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+/* Slightly modified this from the design from letters to an actual
+badge looking thing. I think its a bit more polished */
+.language-code {
+  padding: 0.1rem 0.4rem;
+  background-color: #14b8a619;
+  border-radius: 8px;
+  font-size: 0.75rem; 
+  font-weight: 700;
+  color: #2f2f2f;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+}
+
+.user-name {
+  margin: 0;
+  padding: 0;
+  padding-left: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: -0.025em;
+  flex: 1;
+}
+
+.original-message {
+  padding: 0.2rem 0;
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-style: italic;
+  margin-bottom: 0.1rem;
+  padding-bottom: 0.1rem;
+}
+
+.translated-message {
+  padding: 0.2rem 0;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #111827;
+  font-weight: 400;
+}

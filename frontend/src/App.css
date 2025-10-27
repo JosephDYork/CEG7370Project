@@ -1,3 +1,12 @@
-#root {
-  text-align: center;
+.App {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  overflow: hidden;
+  flex-grow: 1;
 }

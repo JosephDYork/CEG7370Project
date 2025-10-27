@@ -1,0 +1,33 @@
+.chatpanel-container {
+  border-left: 1px solid #ccc;
+  color: black;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  overflow-x: hidden;
+}
+
+.chatpanel-header {
+  background: linear-gradient(135deg, #e6fffa 0%, #f0fdfa 100%);
+  border-bottom: 2px solid #14b8a6;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px #00000014;
+}
+
+.chat-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: -0.025em;
+}
+
+.chatpanel-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem 0;
+}
