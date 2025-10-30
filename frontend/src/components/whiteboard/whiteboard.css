@@ -1,46 +1,65 @@
 .whiteboard-container {
-  position: relative;
-  border: black 1px solid;
+  margin: 0.5rem;
+  margin-bottom: 1rem;
   display: flex;
-  justify-content: center;
+  align-items: stretch;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  flex: 1 1 0;
+}
+
+.whiteboard-header {
+  height: 3rem;
+  min-height: 3rem;
+  background:  #f0fdfa;
+  border-radius: 0.5rem 0.5rem 0 0;
+  border-bottom: 2px solid #14b8a6;
+  display: flex;
   align-items: center;
-  height: 100%;
-  width: 100%;
-}
-
-/* 
-Pop out the canvas and round the corners for a
-more rounded kinda style here.
-TODO: Ensure this isn't distorting the canvas lines
-*/
-.whiteboard-canvas {
-  width: 97%;
-  height: 97%;
-  margin: 1rem;
-  border-radius: 0.5rem;
-}
-
-/* Use absolute positioning to overlay the buttons on top of the whiteboard.
-For some reason 50% didn't look right, 42.5 puts us roughly in the center */
-.button-container {
-  position: absolute;
-  top: 2.5%;
-  left: 42.5%;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 5px;
-}
-
-.color-picker {
-  margin-right: 5px;
-  height: 32px;
-  width: 38px;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .whiteboard-button {
-  margin-right: 5px;
+  height: 2rem;
+  width: auto;
+  padding: 0 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.79rem;
+  font-weight: normal;
 }
 
-.clear-button-icon {
-  padding: 3px 1px 1px 1px;
+.whiteboard-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.whiteboard-button:active {
+  transform: translateY(0);
+}
+
+.whiteboard-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.whiteboard-canvas {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0 0 0.5rem 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
