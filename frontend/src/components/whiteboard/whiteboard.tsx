@@ -1,21 +1,25 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import type { WhiteboardProps } from "../../whiteboardState";
-import { WhiteboardStroke } from "../../whiteboardState";
+import { WhiteboardBrushStroke, WhiteboardTextStroke } from "../../whiteboardState";
 import "./whiteboard.css";
 
 const GRID_SIZE = 20;
 const GRID_COLOR = "rgba(0, 0, 0, 0.1)";
+const CURSOR_BLINK_SPEED = 500; // milliseconds
 
 const Whiteboard = ({
   currentStroke,
+  brushState,
   whiteboardState,
   mouseMoveCallback,
   mouseDownCallback,
   mouseUpCallback,
+  mouseLeaveCallback,
   undoCallback,
   redoCallback
 }: WhiteboardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showCursor, setShowCursor] = useState(true);
 
   const setCanvasSize = () => {
     if (canvasRef.current) {
@@ -36,7 +40,7 @@ const Whiteboard = ({
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: WhiteboardStroke[] = [];
+    const allStrokes: (WhiteboardBrushStroke | WhiteboardTextStroke)[] = [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -54,19 +58,50 @@ const Whiteboard = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid(ctx, canvas.width, canvas.height);
+    drawTextCursor();
 
     for (const stroke of allStrokes) {
-      ctx.beginPath();
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.size;
-      const points = stroke.points;
-      if (points.length > 0) {
-        ctx.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i][0], points[i][1]);
+      if (stroke instanceof WhiteboardTextStroke) {
+        ctx.fillStyle = stroke.color;
+        ctx.font = `${stroke.fontSize}px Arial`;
+        ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
+      } else if (stroke instanceof WhiteboardBrushStroke) {
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        const points = stroke.points;
+        if (points.length > 0) {
+          ctx.moveTo(points[0][0], points[0][1]);
+          for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
       }
+    }
+  };
+
+  const drawTextCursor = () => {
+    if (currentStroke && currentStroke instanceof WhiteboardTextStroke && showCursor) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
+
+      ctx.beginPath();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#000000";
+
+      ctx.moveTo(
+        currentStroke.position[0] + ctx.measureText(currentStroke.text).width + 5,
+        currentStroke.position[1] + 2,
+      );
+      ctx.lineTo(
+        currentStroke.position[0] + ctx.measureText(currentStroke.text).width + 5,
+        currentStroke.position[1] - currentStroke.fontSize,
+      );
+      ctx.stroke();
     }
   };
 
@@ -111,7 +146,19 @@ const Whiteboard = ({
     if (!ctx) throw new Error("Could not get canvas context");
 
     drawCanvas();
-  }, [whiteboardState, currentStroke]);
+  }, [whiteboardState, currentStroke, showCursor]);
+
+  useEffect(() => {
+    if (currentStroke && currentStroke instanceof WhiteboardTextStroke) {
+      const intervalId = setInterval(() => {
+        setShowCursor(prev => !prev);
+      }, CURSOR_BLINK_SPEED);
+
+      return () => clearInterval(intervalId);
+    } else {
+      setShowCursor(true);
+    }
+  }, [currentStroke, brushState]);
 
   return (
     <div className="whiteboard-container">
@@ -128,7 +175,7 @@ const Whiteboard = ({
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseUp={mouseUpCallback}
-        onMouseLeave={mouseUpCallback}
+        onMouseLeave={mouseLeaveCallback}
       />
     </div>
   );

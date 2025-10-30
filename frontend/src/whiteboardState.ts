@@ -1,5 +1,6 @@
 export type WhiteboardProps = {
-  currentStroke?: WhiteboardStroke | null;
+  currentStroke?: WhiteboardBrushStroke | WhiteboardTextStroke | null;
+  brushState: BrushDetails;
   whiteboardState: WhiteboardState;
   mouseMoveCallback: (
     e: React.MouseEvent<HTMLCanvasElement>,
@@ -10,6 +11,7 @@ export type WhiteboardProps = {
     canvasRef: React.RefObject<HTMLCanvasElement | null>,
   ) => void;
   mouseUpCallback: () => void;
+  mouseLeaveCallback: () => void;
   undoCallback: () => void;
   redoCallback: () => void;
 };
@@ -26,7 +28,7 @@ export class BrushDetails {
   }
 }
 
-export class WhiteboardStroke {
+export class WhiteboardBrushStroke {
   id: string;
   color: string;
   size: number;
@@ -50,11 +52,33 @@ export class WhiteboardStroke {
   }
 };
 
+export class WhiteboardTextStroke {
+  id: string;
+  color: string;
+  fontSize: number;
+  position: [number, number];
+  text: string;
+  
+  constructor(
+    strokeId: string,
+    strokeColor: string,
+    fontSize: number,
+    position: [number, number],
+    text: string
+  ) {
+    this.id = strokeId;
+    this.color = strokeColor;
+    this.fontSize = fontSize;
+    this.position = position;
+    this.text = text;
+  }
+};
+
 export class WhiteboardState {
   version: number;
-  strokes: Array<WhiteboardStroke>;
+  strokes: Array<WhiteboardBrushStroke | WhiteboardTextStroke>;
 
-  constructor(version: number, strokes: Array<WhiteboardStroke>) {
+  constructor(version: number, strokes: Array<WhiteboardBrushStroke | WhiteboardTextStroke>) {
     this.version = version;
     this.strokes = strokes;
   }
