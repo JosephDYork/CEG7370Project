@@ -1,9 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  WhiteboardState,
-  WhiteboardStroke,
-  BrushDetails,
-} from "./whiteboardState";
+import { WhiteboardState, WhiteboardBrushStroke, BrushDetails, WhiteboardTextStroke } from "./whiteboardState";
 import { ChatRoomState, ChatMessageData } from "./chatroomState";
 import Header from "./components/header/header";
 import Whiteboard from "./components/whiteboard/whiteboard";
@@ -16,13 +12,99 @@ import "./app.css";
 const App = () => {
   const cursorRef = useRef({ x: 0, y: 0, isdown: false });
   const [strokeCount, setStrokeCount] = useState(0);
-  const [UndoStack, setUndoStack] = useState<Array<WhiteboardStroke>>([]);
-  const [currentStroke, setCurrentStroke] = useState<WhiteboardStroke | null>(null);
+  const [UndoStack, setUndoStack] = useState<Array<WhiteboardBrushStroke | WhiteboardTextStroke>>([]);
+  const [currentStroke, setCurrentStroke] = useState<WhiteboardBrushStroke | WhiteboardTextStroke | null>(null);
   const [chatRoomState, setChatRoomState] = useState<ChatRoomState | null>(null);
   const [currentBrush, setCurrentBrush] = useState<BrushDetails>(
     new BrushDetails("#000000", 2, "pen"));
   const [whiteboardState, setWhiteboardState] = useState(
     new WhiteboardState(1.0, [])); // Just throwing in a version number for now
+
+  const handleMouseLeave = () => {
+    if (currentStroke && currentStroke instanceof WhiteboardBrushStroke) {
+      cursorRef.current.isdown = false;
+      setWhiteboardState((prev) => {
+        const newStrokes = [...prev.strokes, currentStroke];
+        return new WhiteboardState(prev.version, newStrokes);
+      });
+      setCurrentStroke(null);
+    } else if (currentStroke && currentStroke instanceof WhiteboardTextStroke) {
+      setCurrentStroke(null);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    console.log("Global key down event:", e.key);
+    if (currentStroke && currentStroke instanceof WhiteboardTextStroke) {
+      if (e.key === "Enter") {
+        console.log("Finalizing text stroke:", currentStroke.text);
+        setWhiteboardState((prev) => {
+          if (!currentStroke) return prev;
+            const newStrokes = [...prev.strokes, currentStroke];
+            return new WhiteboardState(prev.version, newStrokes);
+        });
+        setCurrentStroke(null);
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        setCurrentStroke(new WhiteboardTextStroke(
+          currentStroke.id,
+          currentStroke.color,
+          currentStroke.fontSize,
+          currentStroke.position,
+          currentStroke.text.slice(0, -1)
+        ));
+      } else if (e.key === "Escape") {
+        setCurrentStroke(null);
+      } else if (e.key.length === 1) {
+        console.log("Adding character to text stroke:", e.key);
+        setCurrentStroke(new WhiteboardTextStroke(
+          currentStroke.id,
+          currentStroke.color,
+          currentStroke.fontSize,
+          currentStroke.position,
+          currentStroke.text + e.key
+        ));
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentStroke]);
+
+  const handleMouseDown = (
+    e: React.MouseEvent<HTMLCanvasElement>,
+    canvasRef: React.RefObject<HTMLCanvasElement | null>
+  ) => {
+    // All this is chores that always need to be done to get the mouse position
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    cursorRef.current.isdown = true;
+
+    // Here we can get the conditional brush details from state and create the
+    // proper type of object.
+    if (currentBrush.tool === "pen") {
+      setCurrentStroke(
+        new WhiteboardBrushStroke(`stroke-${strokeCount}`, currentBrush.color,
+          currentBrush.size, x, y)
+      );
+    } else if (currentBrush.tool === "text") {
+      setCurrentStroke(
+        new WhiteboardTextStroke(`textstroke-${strokeCount}`, currentBrush.color,
+          currentBrush.size * 10, [x, y], "")
+      );
+    }
+
+    setStrokeCount((prev) => prev + 1);
+  };
 
   const handleMouseMove = (
     e: React.MouseEvent<HTMLCanvasElement>,
@@ -38,37 +120,16 @@ const App = () => {
     cursorRef.current.x = x;
     cursorRef.current.y = y;
 
-    if (cursorRef.current.isdown && currentStroke) {
+    if (cursorRef.current.isdown && currentStroke instanceof WhiteboardBrushStroke) {
       currentStroke.addPoint(x, y);
       setCurrentStroke(currentStroke);
     }
   };
 
-  const handleMouseDown = (
-    e: React.MouseEvent<HTMLCanvasElement>,
-    canvasRef: React.RefObject<HTMLCanvasElement | null>
-  ) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    cursorRef.current.isdown = true;
-
-    setCurrentStroke(
-      new WhiteboardStroke(`stroke-${strokeCount}`, currentBrush.color,
-        currentBrush.size, x, y)
-    );
-
-    setStrokeCount((prev) => prev + 1);
-  };
-
   const handleMouseUp = () => {
     cursorRef.current.isdown = false;
 
-    if (currentStroke) {
+    if (currentStroke && currentStroke instanceof WhiteboardBrushStroke) {
       setWhiteboardState((prev) => {
         const newStrokes = [...prev.strokes, currentStroke];
         return new WhiteboardState(prev.version, newStrokes);
@@ -173,10 +234,12 @@ const App = () => {
         />
         <Whiteboard
           currentStroke={currentStroke}
+          brushState={currentBrush}
           whiteboardState={whiteboardState}
           mouseMoveCallback={handleMouseMove}
           mouseDownCallback={handleMouseDown}
           mouseUpCallback={handleMouseUp}
+          mouseLeaveCallback={handleMouseLeave}
           undoCallback={handleUndo}
           redoCallback={handleRedo}
         />
