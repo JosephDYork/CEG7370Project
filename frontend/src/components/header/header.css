@@ -51,7 +51,7 @@
 .header-button {
   border-radius: 10px;
   padding: 0.8rem 1.3rem;
-  font-size: 0.9rem;
+  font-size: 0.79rem;
   cursor: pointer;
 }
 
@@ -62,15 +62,15 @@
 }
 
 .header-button-save {
-  background-color: #28a745;
-  color: white;
-  border: 1px solid #28a745;
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
 }
 
 .header-button-export {
-  background-color: #007bff;
+  background-color: #14b8a6;
   color: white;
-  border: 1px solid #007bff;
+  border: 1px solid #0d9488;
 }
 
 .header-button:hover {
