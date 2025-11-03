@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
-import type { WhiteboardProps } from "../../whiteboardState";
-import { WhiteboardBrushStroke, WhiteboardTextStroke } from "../../whiteboardState";
+import { FreeBrushStroke } from "../../free-brush";
+import { TextBrushStroke } from "../../text-brush";
+import { LineBrushStroke } from "../../line-brush";
+import type { WhiteboardProps } from "../../board-state";
 import "./whiteboard.css";
 
 const GRID_SIZE = 20;
@@ -8,15 +10,14 @@ const GRID_COLOR = "rgba(0, 0, 0, 0.1)";
 const CURSOR_BLINK_SPEED = 500; // milliseconds
 
 const Whiteboard = ({
-  currentStroke,
-  brushState,
+  editorState,
   whiteboardState,
   mouseMoveCallback,
   mouseDownCallback,
   mouseUpCallback,
   mouseLeaveCallback,
   undoCallback,
-  redoCallback
+  redoCallback,
 }: WhiteboardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showCursor, setShowCursor] = useState(true);
@@ -40,7 +41,8 @@ const Whiteboard = ({
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: (WhiteboardBrushStroke | WhiteboardTextStroke)[] = [];
+    const allStrokes: (FreeBrushStroke | TextBrushStroke | LineBrushStroke)[] =
+      [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -48,6 +50,7 @@ const Whiteboard = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Could not get canvas context");
 
+    const currentStroke = editorState.currentStroke;
     if (currentStroke) {
       allStrokes.push(...whiteboardState.strokes, currentStroke);
     } else {
@@ -61,11 +64,11 @@ const Whiteboard = ({
     drawTextCursor();
 
     for (const stroke of allStrokes) {
-      if (stroke instanceof WhiteboardTextStroke) {
+      if (stroke instanceof TextBrushStroke) {
         ctx.fillStyle = stroke.color;
         ctx.font = `${stroke.fontSize}px Arial`;
         ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
-      } else if (stroke instanceof WhiteboardBrushStroke) {
+      } else if (stroke instanceof FreeBrushStroke) {
         ctx.beginPath();
         ctx.strokeStyle = stroke.color;
         ctx.lineWidth = stroke.size;
@@ -77,29 +80,61 @@ const Whiteboard = ({
           }
           ctx.stroke();
         }
+
+        if (stroke.id === editorState.focusedStroke?.id) {
+          const bbox = stroke.getBoundingBox();
+          ctx.beginPath();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "#9191ffff";
+          ctx.strokeRect(
+            bbox[0] - 5,
+            bbox[1] - 5,
+            bbox[2] - bbox[0] + 10,
+            bbox[3] - bbox[1] + 10
+          );
+          ctx.setLineDash([]);
+          ctx.stroke();
+        }
+      } else if (stroke instanceof LineBrushStroke) {
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.moveTo(stroke.startPoint[0], stroke.startPoint[1]);
+        ctx.lineTo(stroke.endPoint[0], stroke.endPoint[1]);
+        ctx.stroke();
       }
     }
   };
 
   const drawTextCursor = () => {
-    if (currentStroke && currentStroke instanceof WhiteboardTextStroke && showCursor) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Could not get canvas context");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
 
+    if (
+      editorState.currentStroke &&
+      editorState.currentStroke instanceof TextBrushStroke &&
+      showCursor
+    ) {
       ctx.beginPath();
       ctx.lineWidth = 1;
       ctx.strokeStyle = "#000000";
 
       ctx.moveTo(
-        currentStroke.position[0] + ctx.measureText(currentStroke.text).width + 5,
-        currentStroke.position[1] + 2,
+        editorState.currentStroke.position[0] +
+          ctx.measureText(editorState.currentStroke.text).width +
+          2,
+        editorState.currentStroke.position[1] + 2
       );
       ctx.lineTo(
-        currentStroke.position[0] + ctx.measureText(currentStroke.text).width + 5,
-        currentStroke.position[1] - currentStroke.fontSize,
+        editorState.currentStroke.position[0] +
+          ctx.measureText(editorState.currentStroke.text).width +
+          2,
+        editorState.currentStroke.position[1] -
+          editorState.currentStroke.fontSize +
+          3
       );
       ctx.stroke();
     }
@@ -146,25 +181,29 @@ const Whiteboard = ({
     if (!ctx) throw new Error("Could not get canvas context");
 
     drawCanvas();
-  }, [whiteboardState, currentStroke, showCursor]);
+  }, [whiteboardState, editorState, showCursor]);
 
   useEffect(() => {
-    if (currentStroke && currentStroke instanceof WhiteboardTextStroke) {
+    if (editorState.currentStroke && editorState.currentStroke instanceof TextBrushStroke) {
       const intervalId = setInterval(() => {
-        setShowCursor(prev => !prev);
+        setShowCursor((prev) => !prev);
       }, CURSOR_BLINK_SPEED);
 
       return () => clearInterval(intervalId);
     } else {
       setShowCursor(true);
     }
-  }, [currentStroke, brushState]);
+  }, [editorState]);
 
   return (
     <div className="whiteboard-container">
       <div className="whiteboard-header">
-        <button className="whiteboard-button" onClick={undoCallback}>↶ Undo</button>
-        <button className="whiteboard-button" onClick={redoCallback}>↷ Redo</button>
+        <button className="whiteboard-button" onClick={undoCallback}>
+          ↶ Undo
+        </button>
+        <button className="whiteboard-button" onClick={redoCallback}>
+          ↷ Redo
+        </button>
         <button className="whiteboard-button">🔍−</button>
         <button className="whiteboard-button">🔍+</button>
       </div>

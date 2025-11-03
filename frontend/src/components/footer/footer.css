@@ -27,6 +27,12 @@
   color: #495057;
 }
 
+.cursor-state {
+  margin-left: 1rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
 @keyframes pulse {
   0% {
     opacity: 1;
