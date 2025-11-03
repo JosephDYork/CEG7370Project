@@ -1,5 +1,5 @@
 import type { ChatPanelProps } from '../../chatroomState';
-import ChatMessage from './chatmessage';
+import ChatMessage from '../chatmessage/chatmessage';
 
 import './chatpanel.css';
 

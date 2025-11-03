@@ -1,10 +1,10 @@
 import type React from "react";
-import { BrushDetails } from "../../whiteboardState";
+import { EditorState } from "../../editor-state";
 import "./toolspanel.css";
 
 interface ToolsPanelProps {
-  brushDetails: BrushDetails;
-  brushChangeCallback: (brush: BrushDetails) => void;
+  editorState: EditorState;
+  editorChangeCallback: (newEditorState: EditorState) => void;
 }
 
 const mathSymbols = [
@@ -15,46 +15,38 @@ const mathSymbols = [
     "π", "β", "θ", "λ",
 ];
 
-const ToolsPanel = ({ brushDetails, brushChangeCallback }: ToolsPanelProps) => {
+const ToolsPanel = ({ editorState, editorChangeCallback }: ToolsPanelProps) => {
   const onToolChange = (toolString: string) => {
-    const newBrush = new BrushDetails(
-      brushDetails.color,
-      brushDetails.size,
-      toolString
-    );
-    brushChangeCallback(newBrush);
+    editorChangeCallback(editorState.setBrushTool(toolString));
   };
 
   const onBrushColorChange = (e: React.InputEvent<HTMLInputElement>) => {
-    const newBrush = new BrushDetails(
-      e.currentTarget.value,
-      brushDetails.size,
-      brushDetails.tool
-    );
-    brushChangeCallback(newBrush);
+    editorChangeCallback(editorState.setBrushColor(e.currentTarget.value));
   };
 
   const onBrushSizeChange = (e: React.InputEvent<HTMLInputElement>) => {
-    const newBrush = new BrushDetails(
-      brushDetails.color,
-      e.currentTarget.valueAsNumber,
-      brushDetails.tool
-    );
-    brushChangeCallback(newBrush);
+    editorChangeCallback(editorState.setBrushSize(parseInt(e.currentTarget.value)));
   };
 
   return (
     <div className="toolspanel-container">
       <h3 className="toolspanel-header">DRAWING TOOLS</h3>
       <button
-        id="undoButton"
+        id="selectButton"
+        onClick={() => onToolChange("select")}
+        className="toolspanel-button"
+      >
+        📐 Select
+      </button>
+      <button
+        id="penButton"
         onClick={() => onToolChange("pen")}
         className="toolspanel-button"
       >
         ✏️ Pen
       </button>
       <button
-        id="redoButton"
+        id="eraserButton"
         onClick={() => onToolChange("eraser")}
         className="toolspanel-button"
       >
@@ -69,17 +61,10 @@ const ToolsPanel = ({ brushDetails, brushChangeCallback }: ToolsPanelProps) => {
       </button>
       <button
         id="linesButton"
-        onClick={() => onToolChange("lines")}
+        onClick={() => onToolChange("line")}
         className="toolspanel-button"
       >
         → Lines
-      </button>
-      <button
-        id="shapesButton"
-        onClick={() => onToolChange("shapes")}
-        className="toolspanel-button"
-      >
-        📐 Shapes
       </button>
       <p>Color:</p>
       <input
