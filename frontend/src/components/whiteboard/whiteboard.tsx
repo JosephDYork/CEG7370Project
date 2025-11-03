@@ -3,6 +3,7 @@ import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
 import { FreeStroke, TextStroke, LineStroke } from "../../brushes";
+// import { useMockWebSocket } from "../../hooks/web-sockets"
 import { useMouseEvents } from "../../hooks/mouse-events";
 import "./whiteboard.css";
 
@@ -13,8 +14,9 @@ const CURSOR_BLINK_SPEED = 500; // milliseconds
 const Whiteboard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showCursor, setShowCursor] = useState(true);
-  const whiteboardState = useBoardStore((state) => state);
+  const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
+  // const { updateState } = useMockWebSocket()
   const { handleUndo, handleRedo } = useUndoRedo();
   const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
     useMouseEvents(canvasRef);
@@ -39,9 +41,9 @@ const Whiteboard = () => {
 
     const currentStroke = editorState.currentStroke;
     if (currentStroke) {
-      allStrokes.push(...whiteboardState.strokes, currentStroke);
+      allStrokes.push(...boardState.strokes, currentStroke);
     } else {
-      allStrokes.push(...whiteboardState.strokes);
+      allStrokes.push(...boardState.strokes);
     }
 
     ctx.fillStyle = "rgba(255, 255, 255, 1)";
@@ -170,7 +172,7 @@ const Whiteboard = () => {
     if (!ctx) throw new Error("Could not get canvas context");
 
     drawCanvas();
-  }, [whiteboardState, editorState, showCursor]);
+  }, [boardState, editorState, showCursor]);
 
   useEffect(() => {
     if (
@@ -186,6 +188,8 @@ const Whiteboard = () => {
       setShowCursor(true);
     }
   }, [editorState]);
+
+  // useEffect(() => { updateState() }, [boardState])
 
   return (
     <div className="whiteboard-container">
