@@ -1,26 +1,23 @@
-import React, { useRef, useEffect, useState } from "react";
-import { FreeBrushStroke } from "../../free-brush";
-import { TextBrushStroke } from "../../text-brush";
-import { LineBrushStroke } from "../../line-brush";
-import type { WhiteboardProps } from "../../board-state";
+import { useRef, useEffect, useState } from "react";
+import { useBoardStore } from "../../stores/board-store";
+import { useEditorStore } from "../../stores/editor-store";
+import { useUndoRedo } from "../../hooks/undo-redo";
+import { FreeStroke, TextStroke, LineStroke } from "../../brushes";
+import { useMouseEvents } from "../../hooks/mouse-events";
 import "./whiteboard.css";
 
 const GRID_SIZE = 20;
 const GRID_COLOR = "rgba(0, 0, 0, 0.1)";
 const CURSOR_BLINK_SPEED = 500; // milliseconds
 
-const Whiteboard = ({
-  editorState,
-  whiteboardState,
-  mouseMoveCallback,
-  mouseDownCallback,
-  mouseUpCallback,
-  mouseLeaveCallback,
-  undoCallback,
-  redoCallback,
-}: WhiteboardProps) => {
+const Whiteboard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showCursor, setShowCursor] = useState(true);
+  const whiteboardState = useBoardStore((state) => state);
+  const editorState = useEditorStore((state) => state);
+  const { handleUndo, handleRedo } = useUndoRedo();
+  const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
+    useMouseEvents(canvasRef);
 
   const setCanvasSize = () => {
     if (canvasRef.current) {
@@ -29,20 +26,10 @@ const Whiteboard = ({
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    mouseMoveCallback(e, canvasRef);
-    drawCanvas();
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    mouseDownCallback(e, canvasRef);
-  };
-
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: (FreeBrushStroke | TextBrushStroke | LineBrushStroke)[] =
-      [];
+    const allStrokes: (FreeStroke | TextStroke | LineStroke)[] = [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -64,11 +51,11 @@ const Whiteboard = ({
     drawTextCursor();
 
     for (const stroke of allStrokes) {
-      if (stroke instanceof TextBrushStroke) {
+      if (stroke instanceof TextStroke) {
         ctx.fillStyle = stroke.color;
         ctx.font = `${stroke.fontSize}px Arial`;
         ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
-      } else if (stroke instanceof FreeBrushStroke) {
+      } else if (stroke instanceof FreeStroke) {
         ctx.beginPath();
         ctx.strokeStyle = stroke.color;
         ctx.lineWidth = stroke.size;
@@ -95,7 +82,7 @@ const Whiteboard = ({
           ctx.setLineDash([]);
           ctx.stroke();
         }
-      } else if (stroke instanceof LineBrushStroke) {
+      } else if (stroke instanceof LineStroke) {
         ctx.beginPath();
         ctx.strokeStyle = stroke.color;
         ctx.lineWidth = stroke.size;
@@ -115,7 +102,7 @@ const Whiteboard = ({
 
     if (
       editorState.currentStroke &&
-      editorState.currentStroke instanceof TextBrushStroke &&
+      editorState.currentStroke instanceof TextStroke &&
       showCursor
     ) {
       ctx.beginPath();
@@ -167,9 +154,11 @@ const Whiteboard = ({
   useEffect(() => {
     setCanvasSize();
     window.addEventListener("resize", setCanvasSize);
+    window.addEventListener("resize", drawCanvas);
 
     return () => {
       window.removeEventListener("resize", setCanvasSize);
+      window.removeEventListener("resize", drawCanvas);
     };
   }, []);
 
@@ -184,7 +173,10 @@ const Whiteboard = ({
   }, [whiteboardState, editorState, showCursor]);
 
   useEffect(() => {
-    if (editorState.currentStroke && editorState.currentStroke instanceof TextBrushStroke) {
+    if (
+      editorState.currentStroke &&
+      editorState.currentStroke instanceof TextStroke
+    ) {
       const intervalId = setInterval(() => {
         setShowCursor((prev) => !prev);
       }, CURSOR_BLINK_SPEED);
@@ -198,10 +190,10 @@ const Whiteboard = ({
   return (
     <div className="whiteboard-container">
       <div className="whiteboard-header">
-        <button className="whiteboard-button" onClick={undoCallback}>
+        <button className="whiteboard-button" onClick={handleUndo}>
           ↶ Undo
         </button>
-        <button className="whiteboard-button" onClick={redoCallback}>
+        <button className="whiteboard-button" onClick={handleRedo}>
           ↷ Redo
         </button>
         <button className="whiteboard-button">🔍−</button>
@@ -213,8 +205,8 @@ const Whiteboard = ({
         className="whiteboard-canvas"
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
-        onMouseUp={mouseUpCallback}
-        onMouseLeave={mouseLeaveCallback}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       />
     </div>
   );
