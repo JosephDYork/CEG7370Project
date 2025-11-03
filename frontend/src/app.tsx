@@ -82,7 +82,7 @@ const App = () => {
         <Whiteboard />
         <ChatPanel />
       </div>
-      <Footer />
+      <Footer cursorState={cursorRef} />
     </div>
   );
 };
