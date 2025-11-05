@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { FreeStroke, TextStroke, LineStroke } from "../brushes";
+import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../strokes";
 
-type StrokeType = FreeStroke | TextStroke | LineStroke;
+type StrokeType = FreeStroke | TextStroke | LineStroke | ShapeStroke;
 
 interface boardState {
   version: number;
@@ -9,6 +9,7 @@ interface boardState {
 }
 
 interface boardActions {
+  updateAllStrokes: (strokes: Array<StrokeType>) => void;
   addStroke: (stroke: StrokeType) => void;
   removeStroke: (strokeId: string) => void;
   removeLastStroke: () => StrokeType | null;
@@ -19,6 +20,12 @@ interface boardActions {
 export const useBoardStore = create<boardState & boardActions>((set, get) => ({
   version: 1.0,
   strokes: [],
+
+  updateAllStrokes: (strokes: Array<StrokeType>) =>
+    set((state) => ({
+      ...state,
+      strokes: [...strokes]
+    })),
 
   addStroke: (stroke) =>
     set((state) => ({

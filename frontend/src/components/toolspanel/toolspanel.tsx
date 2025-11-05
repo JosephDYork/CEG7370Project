@@ -2,11 +2,10 @@ import { useEditorStore } from "../../stores/editor-store";
 import "./toolspanel.css";
 
 const mathSymbols = [
-    "+", "-", "*", "/",
-    "÷", "∫", "∑", "√",
-    "∏", "∂", "∞", "≤",
-    "≥", "≠", "±", "∆",
-    "π", "β", "θ", "λ",
+    "+", "-", "*", "÷",
+    "∫", "∑", "√", "∏",
+    "≤", "≥", "≠", "±", 
+    "∆", "π", "θ", "λ",
 ];
 
 const ToolsPanel = () => {
@@ -32,7 +31,7 @@ const ToolsPanel = () => {
         onClick={() => setBrushTool("select")}
         className="toolspanel-button"
       >
-        📐 Select
+        👆 Select
       </button>
       <button
         id="penButton"
@@ -56,11 +55,32 @@ const ToolsPanel = () => {
         📝 Text
       </button>
       <button
-        id="linesButton"
+        id="lineButton"
         onClick={() => setBrushTool("line")}
         className="toolspanel-button"
       >
-        → Lines
+        📏 Line
+      </button>
+      <button
+        id="squareButton"
+        onClick={() => setBrushTool("square")}
+        className="toolspanel-button"
+      >
+        ⬜ Square
+      </button>
+      <button
+        id="ellipseButton"
+        onClick={() => setBrushTool("ellipse")}
+        className="toolspanel-button"
+      >
+        ⬭ Ellipse
+      </button>
+      <button
+        id="circleButton"
+        onClick={() => setBrushTool("circle")}
+        className="toolspanel-button"
+      >
+        ⭕ Circle
       </button>
       <p>Color:</p>
       <input
