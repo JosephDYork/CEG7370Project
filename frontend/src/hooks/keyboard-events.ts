@@ -1,9 +1,11 @@
-import { TextStroke } from "../brushes";
+import { TextStroke } from "../strokes";
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
+import { useWebSocket } from "./web-sockets";
 
 export const useKeyboardEvents = () => {
   const { addStroke } = useBoardStore();
+  const { sendBoardUpdate } = useWebSocket();
   const { currentStroke, setCurrentStroke } = useEditorStore();
 
   const updateTextStroke = (text: string) => {
@@ -12,7 +14,7 @@ export const useKeyboardEvents = () => {
     const updatedStroke = new TextStroke(
       currentStroke.id,
       currentStroke.color,
-      currentStroke.fontSize,
+      currentStroke.size,
       currentStroke.position,
       text
     );
@@ -26,6 +28,7 @@ export const useKeyboardEvents = () => {
       case "Enter":
         if (currentStroke) {
           addStroke(currentStroke);
+          sendBoardUpdate();
           setCurrentStroke(null);
         }
         break;

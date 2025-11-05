@@ -1,13 +1,12 @@
 import { create } from "zustand";
-import { FreeStroke, TextStroke, LineStroke } from "../brushes";
+import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../strokes";
 
-type StrokeType = FreeStroke | TextStroke | LineStroke;
+type StrokeType = FreeStroke | TextStroke | LineStroke | ShapeStroke;
 
 interface EditorState {
   brushTool: string;
   brushSize: number;
   brushColor: string;
-  strokeCount: number;
   currentStroke: StrokeType | null;
   focusedStroke: StrokeType | null;
   undoStack: StrokeType[];
@@ -17,7 +16,6 @@ interface EditorActions {
   setBrushTool: (brushTool: string) => void;
   setBrushSize: (brushSize: number) => void;
   setBrushColor: (brushColor: string) => void;
-  incrementStrokeCount: () => void;
   setCurrentStroke: (stroke: StrokeType | null) => void;
   setFocusedStroke: (stroke: StrokeType | null) => void;
   addToUndoStack: (stroke: StrokeType) => void;
@@ -29,7 +27,6 @@ export const useEditorStore = create<EditorState & EditorActions>((set) => ({
   brushTool: "pen",
   brushSize: 2,
   brushColor: "#000000",
-  strokeCount: 0,
   currentStroke: null,
   focusedStroke: null,
   undoStack: [],
@@ -50,12 +47,6 @@ export const useEditorStore = create<EditorState & EditorActions>((set) => ({
     set((state) => ({
       ...state,
       brushColor,
-    })),
-
-  incrementStrokeCount: () =>
-    set((state) => ({
-      ...state,
-      strokeCount: state.strokeCount + 1,
     })),
 
   setCurrentStroke: (stroke) =>

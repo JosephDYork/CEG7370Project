@@ -25,6 +25,7 @@ interface ChatState {
 }
 
 interface ChatActions {
+  overwriteState: (chatState: ChatState) => void;
   setRoomId: (roomId: string) => void;
   addMessage: (message: ChatMessage) => void;
   removeMessage: (index: number) => void;
@@ -34,6 +35,10 @@ interface ChatActions {
 export const useChatStore = create<ChatState & ChatActions>((set) => ({
   roomId: "",
   messages: [],
+
+  overwriteState: (chatState) => {
+    set(chatState);
+  },
 
   setRoomId: (roomId) =>
     set((state) => ({

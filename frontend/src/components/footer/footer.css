@@ -14,6 +14,34 @@
   gap: 0.3rem;
 }
 
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.status-connected {
+  background-color: #4caf50;
+}
+
+.status-connecting {
+  background-color: #ff9800;
+  animation: pulse 1.5s infinite;
+}
+
+.status-disconnected {
+  background-color: #f44336;
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
@@ -23,8 +51,9 @@
 }
 
 .status-text {
+  color: #666;
+  font-weight: 400;
   font-size: 0.8rem;
-  color: #495057;
 }
 
 .cursor-state {

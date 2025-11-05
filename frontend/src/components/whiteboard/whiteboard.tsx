@@ -2,9 +2,14 @@ import { useRef, useEffect, useState } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
-import { FreeStroke, TextStroke, LineStroke } from "../../brushes";
-// import { useMockWebSocket } from "../../hooks/web-sockets"
+import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../../strokes";
 import { useMouseEvents } from "../../hooks/mouse-events";
+import {
+  renderFreeStroke,
+  renderTextStroke,
+  renderLineStroke,
+  renderShapeStroke,
+} from "../../rendering";
 import "./whiteboard.css";
 
 const GRID_SIZE = 20;
@@ -16,7 +21,6 @@ const Whiteboard = () => {
   const [showCursor, setShowCursor] = useState(true);
   const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
-  // const { updateState } = useMockWebSocket()
   const { handleUndo, handleRedo } = useUndoRedo();
   const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
     useMouseEvents(canvasRef);
@@ -31,7 +35,8 @@ const Whiteboard = () => {
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: (FreeStroke | TextStroke | LineStroke)[] = [];
+    const allStrokes: (FreeStroke | TextStroke | LineStroke | ShapeStroke)[] =
+      [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -53,44 +58,35 @@ const Whiteboard = () => {
     drawTextCursor();
 
     for (const stroke of allStrokes) {
-      if (stroke instanceof TextStroke) {
-        ctx.fillStyle = stroke.color;
-        ctx.font = `${stroke.fontSize}px Arial`;
-        ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
-      } else if (stroke instanceof FreeStroke) {
-        ctx.beginPath();
-        ctx.strokeStyle = stroke.color;
-        ctx.lineWidth = stroke.size;
-        const points = stroke.points;
-        if (points.length > 0) {
-          ctx.moveTo(points[0][0], points[0][1]);
-          for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1]);
-          }
-          ctx.stroke();
-        }
-
-        if (stroke.id === editorState.focusedStroke?.id) {
-          const bbox = stroke.getBoundingBox();
-          ctx.beginPath();
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = "#9191ffff";
-          ctx.strokeRect(
-            bbox[0] - 5,
-            bbox[1] - 5,
-            bbox[2] - bbox[0] + 10,
-            bbox[3] - bbox[1] + 10
+      switch (stroke.constructor) {
+        case TextStroke:
+          renderTextStroke(
+            ctx,
+            stroke as TextStroke,
+            editorState.focusedStroke as TextStroke
           );
-          ctx.setLineDash([]);
-          ctx.stroke();
-        }
-      } else if (stroke instanceof LineStroke) {
-        ctx.beginPath();
-        ctx.strokeStyle = stroke.color;
-        ctx.lineWidth = stroke.size;
-        ctx.moveTo(stroke.startPoint[0], stroke.startPoint[1]);
-        ctx.lineTo(stroke.endPoint[0], stroke.endPoint[1]);
-        ctx.stroke();
+          break;
+        case FreeStroke:
+          renderFreeStroke(
+            ctx,
+            stroke as FreeStroke,
+            editorState.focusedStroke as FreeStroke
+          );
+          break;
+        case LineStroke:
+          renderLineStroke(
+            ctx,
+            stroke as LineStroke,
+            editorState.focusedStroke as LineStroke
+          );
+          break;
+        case ShapeStroke:
+          renderShapeStroke(
+            ctx,
+            stroke as ShapeStroke,
+            editorState.focusedStroke as ShapeStroke
+          );
+          break;
       }
     }
   };
@@ -122,7 +118,7 @@ const Whiteboard = () => {
           ctx.measureText(editorState.currentStroke.text).width +
           2,
         editorState.currentStroke.position[1] -
-          editorState.currentStroke.fontSize +
+          editorState.currentStroke.size +
           3
       );
       ctx.stroke();
@@ -188,8 +184,6 @@ const Whiteboard = () => {
       setShowCursor(true);
     }
   }, [editorState]);
-
-  // useEffect(() => { updateState() }, [boardState])
 
   return (
     <div className="whiteboard-container">
