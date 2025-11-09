@@ -1,14 +1,43 @@
-export class FreeStroke {
+export type Point = [number, number];
+export type BoundingBox = [number, number, number, number]; // [minX, minY, maxX, maxY]
+
+/**
+ * A unified interface for all stroke types on the canvas.
+ * This allows for polymorphic handling of different shapes.
+ */
+export interface IStroke {
+  id: string;
+  color: string;
+  size: number; // Represents line width, font size, etc.
+
+  /**
+   * Calculates the bounding box of the stroke.
+   * @param {CanvasRenderingContext2D} [ctx] - The canvas rendering context. Required for strokes like TextStroke
+   * that need to measure text dimensions.
+   * @returns {BoundingBox} The coordinates [minX, minY, maxX, maxY] of the bounding box.
+   */
+  getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox;
+
+  /**
+   * Calculates the geometric centroid of the stroke.
+   * @param {CanvasRenderingContext2D} [ctx] - May be required if the centroid calculation
+   * depends on the bounding box of a context-dependent stroke (e.g., TextStroke).
+   * @returns {Point} The [x, y] coordinates of the centroid.
+   */
+  getCentroid(ctx?: CanvasRenderingContext2D): Point;
+}
+
+export class FreeStroke implements IStroke {
   id: string;
   color: string;
   size: number;
-  points: Array<Array<number>>;
+  points: Point[];
 
   constructor(
     strokeId: string,
     strokeColor: string,
     size: number,
-    points: number[][]
+    points: Point[]
   ) {
     this.id = strokeId;
     this.color = strokeColor;
@@ -20,7 +49,11 @@ export class FreeStroke {
     this.points.push([pointX, pointY]);
   }
 
-  getBoundingBox(): [number, number, number, number] {
+  getBoundingBox(): BoundingBox {
+    if (this.points.length === 0) {
+      return [0, 0, 0, 0];
+    }
+
     let minX = this.points[0][0];
     let maxX = this.points[0][0];
     let minY = this.points[0][1];
@@ -35,20 +68,34 @@ export class FreeStroke {
 
     return [minX, minY, maxX, maxY];
   }
+
+  getCentroid(): Point {
+    if (this.points.length === 0) {
+      return [0, 0];
+    }
+
+    let sumX = 0;
+    let sumY = 0;
+    for (const point of this.points) {
+      sumX += point[0];
+      sumY += point[1];
+    }
+    return [sumX / this.points.length, sumY / this.points.length];
+  }
 }
 
-export class TextStroke {
+export class TextStroke implements IStroke {
   id: string;
   color: string;
-  size: number;
-  position: [number, number];
+  size: number; // Represents font size
+  position: Point;
   text: string;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     fontSize: number,
-    position: [number, number],
+    position: Point,
     text: string
   ) {
     this.id = strokeId;
@@ -58,32 +105,41 @@ export class TextStroke {
     this.text = text;
   }
 
-  getBoundingBox(ctx: CanvasRenderingContext2D): [number, number, number, number] {
+  getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox {
+    if (!ctx) {
+      throw new Error("CanvasRenderingContext2D is required to calculate TextStroke bounding box.");
+    }
     ctx.font = `${this.size}px Arial`;
     const textWidth = ctx.measureText(this.text).width;
 
+    // Assuming position is the bottom-left baseline of the text.
     return [
-      this.position[0],
-      this.position[1] - this.size,
-      this.position[0] + textWidth,
-      this.position[1],
+      this.position[0], // minX
+      this.position[1] - this.size, // minY (approximate top of text)
+      this.position[0] + textWidth, // maxX
+      this.position[1], // maxY (baseline)
     ];
+  }
+
+  getCentroid(ctx?: CanvasRenderingContext2D): Point {
+    const [minX, minY, maxX, maxY] = this.getBoundingBox(ctx);
+    return [(minX + maxX) / 2, (minY + maxY) / 2];
   }
 }
 
-export class LineStroke {
+export class LineStroke implements IStroke {
   id: string;
   color: string;
   size: number;
-  startPoint: [number, number];
-  endPoint: [number, number];
+  startPoint: Point;
+  endPoint: Point;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     strokeSize: number,
-    startPoint: [number, number],
-    endPoint: [number, number]
+    startPoint: Point,
+    endPoint: Point
   ) {
     this.id = strokeId;
     this.color = strokeColor;
@@ -96,7 +152,7 @@ export class LineStroke {
     this.endPoint = [newEndX, newEndY];
   }
 
-  getBoundingBox(): [number, number, number, number] {
+  getBoundingBox(): BoundingBox {
     const minX = Math.min(this.startPoint[0], this.endPoint[0]);
     const maxX = Math.max(this.startPoint[0], this.endPoint[0]);
     const minY = Math.min(this.startPoint[1], this.endPoint[1]);
@@ -104,41 +160,56 @@ export class LineStroke {
 
     return [minX, minY, maxX, maxY];
   }
+
+  getCentroid(): Point {
+    return [
+      (this.startPoint[0] + this.endPoint[0]) / 2,
+      (this.startPoint[1] + this.endPoint[1]) / 2,
+    ];
+  }
 }
 
-export class ShapeStroke {
+export class ShapeStroke implements IStroke {
   id: string;
   type: string;
   color: string;
-  lineSize: number;
-  origin: [number, number];
-  termination: [number, number];
+  size: number; // Renamed from lineSize for interface consistency
+  origin: Point;
+  termination: Point;
 
   constructor(
     strokeId: string,
     shapeType: string,
     strokeColor: string,
-    lineSize: number,
-    origin: [number, number],
-    termination: [number, number]
+    strokeSize: number, // Renamed from lineSize for consistency
+    origin: Point,
+    termination: Point
   ) {
     this.id = strokeId;
     this.type = shapeType;
     this.color = strokeColor;
-    this.lineSize = lineSize;
-    (this.origin = origin), (this.termination = termination);
+    this.size = strokeSize;
+    this.origin = origin;
+    this.termination = termination;
   }
 
   updateTermination(newEndX: number, newEndY: number): void {
     this.termination = [newEndX, newEndY];
   }
 
-  getBoundingBox(): [number, number, number, number] {
+  getBoundingBox(): BoundingBox {
     const minX = Math.min(this.origin[0], this.termination[0]);
     const maxX = Math.max(this.origin[0], this.termination[0]);
     const minY = Math.min(this.origin[1], this.termination[1]);
     const maxY = Math.max(this.origin[1], this.termination[1]);
 
     return [minX, minY, maxX, maxY];
+  }
+
+  getCentroid(): Point {
+    return [
+      (this.origin[0] + this.termination[0]) / 2,
+      (this.origin[1] + this.termination[1]) / 2,
+    ];
   }
 }

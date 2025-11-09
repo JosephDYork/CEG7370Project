@@ -1,25 +1,18 @@
-import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "./strokes";
+import { IStroke } from "./strokes";
 
-export const renderTextStroke = (
-  ctx: CanvasRenderingContext2D,
-  stroke: TextStroke,
-  focusedStroke?: TextStroke
-) => {
-  console.log("rendering a free stroke");
-  ctx.fillStyle = stroke.color;
-  ctx.font = `${stroke.size}px Arial`;
-  ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
-
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
-};
-
+/**
+ * Renders a selection box around a given stroke.
+ * @param ctx The 2D rendering context of the canvas.
+ * @param stroke The stroke to surround with a selection box.
+ */
 export const renderSelectBox = (
   ctx: CanvasRenderingContext2D,
-  stroke: FreeStroke | TextStroke | LineStroke | ShapeStroke
+  stroke: IStroke
 ) => {
-  const [x1, y1, x2, y2] = stroke.getBoundingBox(ctx);
+  // The IStroke interface defines getBoundingBox() without a context parameter.
+  // The stroke implementation is responsible for having access to a context if needed
+  // or pre-calculating the box.
+  const [x1, y1, x2, y2] = stroke.getBoundingBox();
   ctx.beginPath();
   ctx.lineWidth = 1;
   ctx.strokeStyle = "#9191ffff";
@@ -27,81 +20,26 @@ export const renderSelectBox = (
   ctx.stroke();
 };
 
-export const renderFreeStroke = (
+/**
+ * Renders a single stroke on the canvas, applying focus styling if applicable.
+ * This function leverages polymorphism by calling the `render` method on the stroke object,
+ * which contains the specific rendering logic for that stroke type.
+ * This assumes the `IStroke` interface will be updated to include a `render(ctx)` method.
+ * @param ctx The 2D rendering context of the canvas.
+ * @param stroke The stroke object to render, conforming to the IStroke interface.
+ * @param focusedStroke An optional stroke object that is currently focused; if its ID matches, a select box will be rendered.
+ */
+export const renderStroke = (
   ctx: CanvasRenderingContext2D,
-  stroke: FreeStroke,
-  focusedStroke?: FreeStroke
+  stroke: IStroke,
+  focusedStroke?: IStroke
 ) => {
-  if (stroke.points.length === 0) return;
+  // Polymorphically call the render method on the stroke object itself.
+  // This avoids `instanceof` checks and keeps rendering logic encapsulated
+  // within each respective stroke class.
+  stroke.render(ctx);
 
-  ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.size;
-  ctx.moveTo(stroke.points[0][0], stroke.points[0][1]);
-  for (const point of stroke.points) {
-    ctx.lineTo(point[0], point[1]);
-  }
-
-  ctx.stroke();
-
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
-};
-
-export const renderLineStroke = (
-  ctx: CanvasRenderingContext2D,
-  stroke: LineStroke,
-  focusedStroke?: LineStroke
-) => {
-  ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.size;
-  ctx.moveTo(...stroke.startPoint);
-  ctx.lineTo(...stroke.endPoint);
-  ctx.stroke();
-
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
-};
-
-export const renderShapeStroke = (
-  ctx: CanvasRenderingContext2D,
-  stroke: ShapeStroke,
-  focusedStroke?: ShapeStroke
-) => {
-  ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.lineSize;
-
-  const [x1, y1] = stroke.origin;
-  const [x2, y2] = stroke.termination;
-  const centerX = (x1 + x2) / 2;
-  const centerY = (y1 + y2) / 2;
-
-  switch (stroke.type) {
-    case "square":
-      ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-      break;
-    case "ellipse":
-      ctx.ellipse(
-        centerX,
-        centerY,
-        Math.abs(x2 - x1) / 2,
-        Math.abs(y2 - y1) / 2,
-        0,
-        0,
-        2 * Math.PI
-      );
-      break;
-    case "circle":
-      const radius = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2;
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      break;
-  }
-  ctx.stroke();
-
+  // Render a select box if the stroke is currently focused.
   if (stroke.id === focusedStroke?.id) {
     renderSelectBox(ctx, stroke);
   }
