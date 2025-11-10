@@ -30,13 +30,10 @@ export class LineStroke implements ILineStroke {
   }
 
   updateEndPoint(x: number, y: number): LineStroke {
-    return new LineStroke(
-      this.id,
-      this.color,
-      this.size,
-      this.startPoint,
-      [x, y]
-    );
+    return new LineStroke(this.id, this.color, this.size, this.startPoint, [
+      x,
+      y,
+    ]);
   }
 
   getCentroid(): Point {

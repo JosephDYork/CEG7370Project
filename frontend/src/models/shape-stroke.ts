@@ -133,7 +133,9 @@ export class ShapeStroke implements IShapeStroke {
     const normalizedY = (y - centerY) / radiusY;
     const ellipseDistance = Math.sqrt(normalizedX ** 2 + normalizedY ** 2);
 
-    return Math.abs(ellipseDistance - 1) <= tolerance / Math.min(radiusX, radiusY);
+    return (
+      Math.abs(ellipseDistance - 1) <= tolerance / Math.min(radiusX, radiusY)
+    );
   }
 
   private checkPointNearLine(

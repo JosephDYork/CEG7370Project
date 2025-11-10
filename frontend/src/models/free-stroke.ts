@@ -26,12 +26,10 @@ export class FreeStroke implements IFreeStroke {
   }
 
   addPoint(x: number, y: number): FreeStroke {
-    return new FreeStroke(
-      this.id,
-      this.color,
-      this.size,
-      [...this.points, [x, y]]
-    );
+    return new FreeStroke(this.id, this.color, this.size, [
+      ...this.points,
+      [x, y],
+    ]);
   }
 
   getCentroid(): Point {

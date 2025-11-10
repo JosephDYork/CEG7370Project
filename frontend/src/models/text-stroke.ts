@@ -51,7 +51,11 @@ export class TextStroke implements ITextStroke {
     ];
   }
 
-  isPointNear(point: Point, tolerance: number = 10, ctx?: CanvasRenderingContext2D): boolean {
+  isPointNear(
+    point: Point,
+    tolerance: number = 10,
+    ctx?: CanvasRenderingContext2D
+  ): boolean {
     if (!ctx) return false;
     const [x, y] = point;
     const [x1, y1, x2, y2] = this.getBoundingBox(ctx);

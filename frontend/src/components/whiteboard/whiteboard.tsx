@@ -121,18 +121,12 @@ const Whiteboard = () => {
       ctx.strokeStyle = "#000000";
 
       ctx.moveTo(
-        textStroke.position[0] +
-          ctx.measureText(textStroke.text).width +
-          2,
+        textStroke.position[0] + ctx.measureText(textStroke.text).width + 2,
         textStroke.position[1] + 2
       );
       ctx.lineTo(
-        textStroke.position[0] +
-          ctx.measureText(textStroke.text).width +
-          2,
-        textStroke.position[1] -
-          textStroke.size +
-          3
+        textStroke.position[0] + ctx.measureText(textStroke.text).width + 2,
+        textStroke.position[1] - textStroke.size + 3
       );
       ctx.stroke();
     }

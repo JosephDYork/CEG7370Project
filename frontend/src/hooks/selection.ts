@@ -11,11 +11,14 @@ import { useWebSocket } from "./web-sockets";
 export const useSelectionTool = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [selectBoxExists, setSelectBoxExists] = useState(false);
-  const [originCoords, setOriginCoords] = useState<[number, number] | null>(null);
+  const [originCoords, setOriginCoords] = useState<[number, number] | null>(
+    null
+  );
 
   const { sendBoardUpdate } = useWebSocket();
   const { strokes, forceUpdate } = useBoardStore();
-  const { addFocusedStroke, clearFocusedStrokes, setCurrentStroke } = useEditorStore();
+  const { addFocusedStroke, clearFocusedStrokes, setCurrentStroke } =
+    useEditorStore();
 
   const startSelectBox = (coords: [number, number]) => {
     setSelectBoxExists(true);

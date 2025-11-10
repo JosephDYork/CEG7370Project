@@ -2,10 +2,22 @@ import { useEditorStore } from "../../stores/editor-store";
 import "./toolspanel.css";
 
 const mathSymbols = [
-    "+", "-", "*", "÷",
-    "∫", "∑", "√", "∏",
-    "≤", "≥", "≠", "±", 
-    "∆", "π", "θ", "λ",
+  "+",
+  "-",
+  "*",
+  "÷",
+  "∫",
+  "∑",
+  "√",
+  "∏",
+  "≤",
+  "≥",
+  "≠",
+  "±",
+  "∆",
+  "π",
+  "θ",
+  "λ",
 ];
 
 const ToolsPanel = () => {

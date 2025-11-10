@@ -14,5 +14,9 @@ export interface Stroke {
   type: StrokeTypeEnum;
   getCentroid(): Point;
   getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox;
-  isPointNear(point: Point, tolerance?: number, ctx?: CanvasRenderingContext2D): boolean;
+  isPointNear(
+    point: Point,
+    tolerance?: number,
+    ctx?: CanvasRenderingContext2D
+  ): boolean;
 }

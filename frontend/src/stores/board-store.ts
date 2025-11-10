@@ -21,7 +21,7 @@ export const useBoardStore = create<boardState & boardActions>((set, get) => ({
   updateAllStrokes: (strokes: Array<StrokeType>) =>
     set((state) => ({
       ...state,
-      strokes: [...strokes]
+      strokes: [...strokes],
     })),
 
   addStroke: (stroke) =>

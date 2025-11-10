@@ -12,7 +12,7 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const { roomId, messages, } = useChatStore();
+  const { roomId, messages } = useChatStore();
   const { clearStrokes, updateAllStrokes } = useBoardStore();
 
   const send = (message: any) => {
@@ -61,22 +61,46 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
           switch (stroke.type) {
             case "free":
               incomingStrokes.push(
-                new FreeStroke(stroke.id, stroke.color, stroke.size, stroke.points)
+                new FreeStroke(
+                  stroke.id,
+                  stroke.color,
+                  stroke.size,
+                  stroke.points
+                )
               );
               break;
             case "text":
               incomingStrokes.push(
-                new TextStroke(stroke.id, stroke.color, stroke.size, stroke.position, stroke.text)
+                new TextStroke(
+                  stroke.id,
+                  stroke.color,
+                  stroke.size,
+                  stroke.position,
+                  stroke.text
+                )
               );
               break;
             case "line":
               incomingStrokes.push(
-                new LineStroke(stroke.id, stroke.color, stroke.size, stroke.startPoint, stroke.endPoint)
+                new LineStroke(
+                  stroke.id,
+                  stroke.color,
+                  stroke.size,
+                  stroke.startPoint,
+                  stroke.endPoint
+                )
               );
               break;
             case "shape":
               incomingStrokes.push(
-                new ShapeStroke(stroke.id, stroke.shapeType, stroke.color, stroke.lineSize, stroke.origin, stroke.termination)
+                new ShapeStroke(
+                  stroke.id,
+                  stroke.shapeType,
+                  stroke.color,
+                  stroke.lineSize,
+                  stroke.origin,
+                  stroke.termination
+                )
               );
               break;
           }
