@@ -2,44 +2,50 @@ import React, { useState } from "react";
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
 import { useCursorStore } from "../stores/cursor-store";
-import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../strokes";
+import { FreeStroke } from "../models/free-stroke";
+import { TextStroke } from "../models/text-stroke";
+import { LineStroke } from "../models/line-stroke";
+import { ShapeStroke } from "../models/shape-stroke";
+import type { Point, StrokeType } from "../models/strokes";
 import { useWebSocket } from "./web-sockets";
-import { useTranslation } from "./translation";
-import { useSelection } from "./selection";
-import { isPointOnStroke } from "../collisions";
+import { useSelectionTool } from "./selection";
 
 export const useMouseEvents = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>
 ) => {
-  const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
-
+  const selection = useSelectionTool();
   const { addStroke } = useBoardStore();
-  const { brushTool, brushSize, brushColor, currentStroke, focusedStrokes, setCurrentStroke, clearFocusedStrokes } = useEditorStore();
-  const { isDown, updateCursor, setCursorPosition, setCursorDown } = useCursorStore();
   const { sendBoardUpdate } = useWebSocket();
-
-  const translation = useTranslation();
-  const selection = useSelection();
+  const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
+  const {
+    brushTool,
+    brushSize,
+    brushColor,
+    currentStroke,
+    focusedStrokes,
+    setCurrentStroke,
+    clearFocusedStrokes,
+  } = useEditorStore();
+  const { isDown, updateCursor, setCursorPosition, setCursorDown } =
+    useCursorStore();
 
   const getCanvasPosition = (
     e: React.MouseEvent<HTMLCanvasElement>
-  ): [number, number] => {
+  ): Point => {
     if (!canvasRef.current) return [0, 0];
     const rect = canvasRef.current.getBoundingClientRect();
     return [e.clientX - rect.left, e.clientY - rect.top];
   };
 
-  const finishStroke = (
-    stroke: FreeStroke | LineStroke | TextStroke | ShapeStroke
-  ) => {
+  const finishStroke = (stroke: StrokeType) => {
     addStroke(stroke);
     sendBoardUpdate();
-    if (!(stroke instanceof TextStroke)) {
+    if (stroke.type !== "text") {
       setCurrentStroke(null);
     }
   };
 
-  const createStroke = (coords: [number, number], strokeId: string) => {
+  const createStroke = (coords: Point, strokeId: string) => {
     const [x, y] = coords;
 
     switch (brushTool) {
@@ -51,12 +57,44 @@ export const useMouseEvents = (
         return new LineStroke(strokeId, brushColor, brushSize, [x, y], [x, y]);
       case "square":
       case "ellipse":
-      case "circle":
-        return new ShapeStroke(strokeId, brushTool, brushColor, brushSize, [x, y], [x, y]);
+        return new ShapeStroke(
+          strokeId,
+          brushTool,
+          brushColor,
+          brushSize,
+          [x, y],
+          [x, y]
+        );
       case "select":
         return selection.startSelectBox([x, y]);
       default:
         return null;
+    }
+  };
+
+  const updateCurrentStroke = (coords: Point, ctx: CanvasRenderingContext2D) => {
+    if (!currentStroke) return;
+
+    switch (currentStroke.type) {
+      case "free":
+        const freeStroke = currentStroke as FreeStroke;
+        const updatedFreeStroke = freeStroke.addPoint(coords[0], coords[1]);
+        setCurrentStroke(updatedFreeStroke);
+        break;
+      case "line":
+        const lineStroke = currentStroke as LineStroke;
+        const updatedLineStroke = lineStroke.updateEndPoint(coords[0], coords[1]);
+        setCurrentStroke(updatedLineStroke);
+        break;
+      case "shape":
+        const shapeStroke = currentStroke as ShapeStroke;
+        if (selection.selectBoxExists) {
+          selection.updateSelectBox(shapeStroke, coords, ctx);
+        } else {
+          const updatedShapeStroke = shapeStroke.updateTermination(coords[0], coords[1]);
+          setCurrentStroke(updatedShapeStroke);
+        }
+        break;
     }
   };
 
@@ -66,8 +104,11 @@ export const useMouseEvents = (
 
     if (brushTool === "select" && focusedStrokes.length > 0) {
       const ctx = canvasRef.current?.getContext("2d");
-      if (ctx && focusedStrokes.some(stroke => isPointOnStroke(coords, stroke, 10, ctx))) {
-        translation.startTranslation(coords);
+      if (
+        ctx &&
+        focusedStrokes.some((stroke) => stroke.isPointNear(coords, 10, ctx))
+      ) {
+        selection.startTranslation(coords);
         return;
       } else {
         clearFocusedStrokes();
@@ -89,8 +130,15 @@ export const useMouseEvents = (
     const coords = getCanvasPosition(e);
     setCursorPosition(coords[0], coords[1]);
 
-    if (brushTool === "select" && focusedStrokes.length > 0 && !translation.isTranslating && !isDown) {
-      const strokeHovered = focusedStrokes.some(stroke => isPointOnStroke(coords, stroke, 10, ctx));
+    if (
+      brushTool === "select" &&
+      focusedStrokes.length > 0 &&
+      !selection.isTranslating &&
+      !isDown
+    ) {
+      const strokeHovered = focusedStrokes.some((stroke) =>
+        stroke.isPointNear(coords, 10, ctx)
+      );
       if (strokeHovered !== hoveringTranslatable) {
         setHoveringTranslatable(strokeHovered);
         canvasRef.current.style.cursor = strokeHovered ? "move" : "crosshair";
@@ -100,27 +148,14 @@ export const useMouseEvents = (
       canvasRef.current.style.cursor = "default";
     }
 
-    if (translation.isTranslating && isDown && focusedStrokes.length > 0) {
-      translation.translateStrokes(coords, focusedStrokes);
+    if (selection.isTranslating && isDown && focusedStrokes.length > 0) {
+      selection.translateStrokes(coords, focusedStrokes);
       return;
     }
 
     if (!isDown || !currentStroke) return;
 
-    if (currentStroke instanceof FreeStroke) {
-      currentStroke.addPoint(coords[0], coords[1]);
-      setCurrentStroke(currentStroke);
-    } else if (currentStroke instanceof LineStroke) {
-      currentStroke.updateEndPoint(coords[0], coords[1]);
-      setCurrentStroke(currentStroke);
-    } else if (currentStroke instanceof ShapeStroke) {
-      if (selection.selectBoxExists) {
-        selection.updateSelectBox(currentStroke, coords, ctx);
-      } else {
-        currentStroke.updateTermination(coords[0], coords[1]);
-        setCurrentStroke(currentStroke);
-      }
-    }
+    updateCurrentStroke(coords, ctx);
   };
 
   const handleMouseUp = () => {
@@ -134,8 +169,8 @@ export const useMouseEvents = (
       selection.endSelectBox();
     }
 
-    if (translation.isTranslating) {
-      translation.endTranslation();
+    if (selection.isTranslating) {
+      selection.endTranslation();
       if (canvasRef.current) {
         canvasRef.current.style.cursor = "default";
       }
@@ -150,14 +185,24 @@ export const useMouseEvents = (
     }
     setHoveringTranslatable(false);
 
-    if (currentStroke && (currentStroke instanceof FreeStroke || currentStroke instanceof LineStroke)) {
-      finishStroke(currentStroke);
-    } else if (currentStroke && selection.selectBoxExists) {
-      selection.endSelectBox();
+    if (currentStroke) {
+      switch (currentStroke.type) {
+        case "free":
+        case "line":
+          finishStroke(currentStroke);
+          break;
+        case "shape":
+          if (selection.selectBoxExists) {
+            selection.endSelectBox();
+          }
+          break;
+        default:
+          break;
+      }
     }
 
-    if (translation.isTranslating) {
-      translation.endTranslation();
+    if (selection.isTranslating) {
+      selection.endTranslation();
     }
   };
 

@@ -1,14 +1,24 @@
 import { useState } from "react";
-import { ShapeStroke, TextStroke } from "../strokes";
+import { FreeStroke } from "../models/free-stroke";
+import { TextStroke } from "../models/text-stroke";
+import { LineStroke } from "../models/line-stroke";
+import { ShapeStroke } from "../models/shape-stroke";
+import type { StrokeType } from "../models/strokes";
 import { useEditorStore } from "../stores/editor-store";
 import { useBoardStore } from "../stores/board-store";
-import { checkRectangleInsideRectangle } from "../geometry";
+import { useWebSocket } from "./web-sockets";
 
-export const useSelection = () => {
+export const useSelectionTool = () => {
+  const [isTranslating, setIsTranslating] = useState(false);
   const [selectBoxExists, setSelectBoxExists] = useState(false);
+  const [originCoords, setOriginCoords] = useState<[number, number] | null>(
+    null
+  );
+
+  const { sendBoardUpdate } = useWebSocket();
+  const { strokes, forceUpdate } = useBoardStore();
   const { addFocusedStroke, clearFocusedStrokes, setCurrentStroke } =
     useEditorStore();
-  const { strokes } = useBoardStore();
 
   const startSelectBox = (coords: [number, number]) => {
     setSelectBoxExists(true);
@@ -30,27 +40,17 @@ export const useSelection = () => {
     coords: [number, number],
     ctx: CanvasRenderingContext2D
   ) => {
-    selectBox.updateTermination(coords[0], coords[1]);
-    setCurrentStroke(selectBox);
+    const updatedSelectBox = selectBox.updateTermination(coords[0], coords[1]);
+    setCurrentStroke(updatedSelectBox);
 
     clearFocusedStrokes();
     strokes.forEach((stroke) => {
-      const bbox =
-        stroke instanceof TextStroke
+      const strokeBBox =
+        stroke.type === "text"
           ? stroke.getBoundingBox(ctx)
           : stroke.getBoundingBox();
 
-      const innerCorner1: [number, number] = [bbox[0], bbox[1]];
-      const innerCorner2: [number, number] = [bbox[2], bbox[3]];
-
-      if (
-        checkRectangleInsideRectangle(
-          innerCorner1,
-          innerCorner2,
-          selectBox.origin,
-          selectBox.termination
-        )
-      ) {
+      if (updatedSelectBox.isRectangleInsideRectangle(strokeBBox)) {
         addFocusedStroke(stroke);
       }
     });
@@ -61,10 +61,71 @@ export const useSelection = () => {
     setCurrentStroke(null);
   };
 
+  const startTranslation = (coords: [number, number]) => {
+    setIsTranslating(true);
+    setOriginCoords(coords);
+  };
+
+  const translateStrokes = (
+    currentCoords: [number, number],
+    strokes: StrokeType[]
+  ) => {
+    if (!originCoords) return;
+
+    const [deltaX, deltaY] = [
+      currentCoords[0] - originCoords[0],
+      currentCoords[1] - originCoords[1],
+    ];
+
+    strokes.forEach((stroke) => {
+      switch (stroke.type) {
+        case "free":
+          const freeStroke = stroke as FreeStroke;
+          freeStroke.points.forEach((point) => {
+            point[0] += deltaX;
+            point[1] += deltaY;
+          });
+          break;
+        case "text":
+          const textStroke = stroke as TextStroke;
+          textStroke.position[0] += deltaX;
+          textStroke.position[1] += deltaY;
+          break;
+        case "line":
+          const lineStroke = stroke as LineStroke;
+          lineStroke.startPoint[0] += deltaX;
+          lineStroke.startPoint[1] += deltaY;
+          lineStroke.endPoint[0] += deltaX;
+          lineStroke.endPoint[1] += deltaY;
+          break;
+        case "shape":
+          const shapeStroke = stroke as ShapeStroke;
+          shapeStroke.origin[0] += deltaX;
+          shapeStroke.origin[1] += deltaY;
+          shapeStroke.termination[0] += deltaX;
+          shapeStroke.termination[1] += deltaY;
+          break;
+      }
+    });
+
+    forceUpdate();
+    setOriginCoords(currentCoords);
+  };
+
+  const endTranslation = () => {
+    setIsTranslating(false);
+    setOriginCoords(null);
+    sendBoardUpdate();
+  };
+
   return {
     selectBoxExists,
+    isTranslating,
     startSelectBox,
     updateSelectBox,
     endSelectBox,
+    startTranslation,
+    translateStrokes,
+    endTranslation,
   };
 };

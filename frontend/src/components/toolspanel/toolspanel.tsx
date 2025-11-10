@@ -1,26 +1,59 @@
+import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
+import { FreeStroke } from "../../models/free-stroke";
+import { TextStroke } from "../../models/text-stroke";
+import { LineStroke } from "../../models/line-stroke";
+import { ShapeStroke } from "../../models/shape-stroke";
+import type { StrokeType } from "../../models/strokes";
 import "./toolspanel.css";
 
 const mathSymbols = [
-    "+", "-", "*", "÷",
-    "∫", "∑", "√", "∏",
-    "≤", "≥", "≠", "±", 
-    "∆", "π", "θ", "λ",
+  "+",
+  "-",
+  "*",
+  "÷",
+  "∫",
+  "∑",
+  "√",
+  "∏",
+  "≤",
+  "≥",
+  "≠",
+  "±",
+  "∆",
+  "π",
+  "θ",
+  "λ",
 ];
 
 const ToolsPanel = () => {
   const setBrushTool = useEditorStore((state) => state.setBrushTool);
   const setBrushColor = useEditorStore((state) => state.setBrushColor);
   const setBrushSize = useEditorStore((state) => state.setBrushSize);
+  const { strokes, updateAllStrokes } = useBoardStore();
+  const { focusedStrokes } = useEditorStore();
+
+  const updateFocusedStrokes = (updates: { color?: string; size?: number }) => {
+    if (focusedStrokes.length > 0) {
+      const updatedStrokes = strokes.map((stroke) =>
+        focusedStrokes.some((focused) => focused.id === stroke.id)
+          ? stroke.withUpdates(updates)
+          : stroke
+      );
+      updateAllStrokes(updatedStrokes);
+    }
+  };
 
   const onBrushColorChange = (event: React.FormEvent<HTMLInputElement>) => {
     const color = event.currentTarget.value;
     setBrushColor(color);
+    updateFocusedStrokes({ color: color });
   };
 
   const onBrushSizeChange = (event: React.FormEvent<HTMLInputElement>) => {
     const size = parseInt(event.currentTarget.value, 10);
     setBrushSize(size);
+    updateFocusedStrokes({ size: size });
   };
 
   return (
@@ -75,18 +108,12 @@ const ToolsPanel = () => {
       >
         ⬭ Ellipse
       </button>
-      <button
-        id="circleButton"
-        onClick={() => setBrushTool("circle")}
-        className="toolspanel-button"
-      >
-        ⭕ Circle
-      </button>
       <p>Color:</p>
       <input
         type="color"
         className="color-picker"
         onInput={onBrushColorChange}
+        defaultValue={"#000000"}
       />
       <p>Brush Size:</p>
       <input
@@ -95,6 +122,7 @@ const ToolsPanel = () => {
         max="10"
         className="brush-size-slider"
         onInput={onBrushSizeChange}
+        defaultValue={2}
       />
       <h3 className="toolspanel-header">MATH SYMBOLS</h3>
       <div className="math-symbols-grid">

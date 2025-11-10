@@ -1,9 +1,13 @@
 <p align="center"> 
-    <img src="frontend/public/polyboard.svg" alt="Polyboard Logo" height="640px" width="320px">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="frontend/public/polyboardLight.svg">
+      <source media="(prefers-color-scheme: light)" srcset="frontend/public/polyboard.svg">
+      <img src="frontend/public/polyboard.svg" alt="Polyboard Logo" height="120px">
+    </picture>
 </p>
 
 <h1 align="center"> 
-  Polyboard: The Interactive Multilingual Whiteboard
+  The Interactive Multilingual Whiteboard
 </h1>
 
 <p align="center">
@@ -46,7 +50,7 @@
 ### Drawing Tools
 - **Pen Tool**: Freehand drawing with customizable colors and brush sizes.
 - **Text Tool**: Add typed text to your whiteboard.
-- **Shape Tools**: Draw lines, squares, circles, and ellipses.
+- **Shape Tools**: Draw lines, rectangles, and ellipses.
 - **Selection Tool**: Select and focus on specific strokes.
 - **Mathematical Symbols**: Quick access to common mathematical notation.
 ### Real-time Collaboration
