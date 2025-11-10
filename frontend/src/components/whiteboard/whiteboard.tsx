@@ -9,6 +9,7 @@ import {
   renderTextStroke,
   renderLineStroke,
   renderShapeStroke,
+  renderSelectionBox,
 } from "../../rendering";
 import "./whiteboard.css";
 
@@ -57,34 +58,41 @@ const Whiteboard = () => {
     drawGrid(ctx, canvas.width, canvas.height);
     drawTextCursor();
 
+    if (
+      currentStroke instanceof ShapeStroke &&
+      currentStroke.id === "selectbox"
+    ) {
+      renderSelectionBox(ctx, currentStroke);
+    }
+
     for (const stroke of allStrokes) {
       switch (stroke.constructor) {
         case TextStroke:
           renderTextStroke(
             ctx,
             stroke as TextStroke,
-            editorState.focusedStroke as TextStroke
+            editorState.focusedStrokes
           );
           break;
         case FreeStroke:
           renderFreeStroke(
             ctx,
             stroke as FreeStroke,
-            editorState.focusedStroke as FreeStroke
+            editorState.focusedStrokes
           );
           break;
         case LineStroke:
           renderLineStroke(
             ctx,
             stroke as LineStroke,
-            editorState.focusedStroke as LineStroke
+            editorState.focusedStrokes
           );
           break;
         case ShapeStroke:
           renderShapeStroke(
             ctx,
             stroke as ShapeStroke,
-            editorState.focusedStroke as ShapeStroke
+            editorState.focusedStrokes
           );
           break;
       }

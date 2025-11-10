@@ -1,58 +1,88 @@
 import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "./strokes";
 
+type StrokeType = FreeStroke | TextStroke | LineStroke | ShapeStroke;
+
+const BOX_BORDER = "#9191ff";
+const BOX_BORDER_WIDTH = 1;
+const HANDLE_FILL = "#ffffff";
+const SELECTION_BOX_FILL = "#9191ff1a";
+
+const drawHandle = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+) => {
+  const half = size / 2;
+  ctx.fillRect(x - half, y - half, size, size);
+  ctx.strokeRect(x - half, y - half, size, size);
+};
+
+export const renderBoundingBox = (
+  ctx: CanvasRenderingContext2D,
+  stroke: StrokeType
+) => {
+  const [x1, y1, x2, y2] = stroke.getBoundingBox(ctx);
+  const padding = 5,
+    handleSize = 6;
+
+  ctx.strokeStyle = BOX_BORDER;
+  ctx.lineWidth = BOX_BORDER_WIDTH;
+  ctx.strokeRect(
+    x1 - padding,
+    y1 - padding,
+    x2 - x1 + 2 * padding,
+    y2 - y1 + 2 * padding
+  );
+
+  ctx.fillStyle = HANDLE_FILL;
+  [
+    [x1, y1],
+    [x2, y1],
+    [x1, y2],
+    [x2, y2],
+  ].forEach(([x, y]) =>
+    drawHandle(
+      ctx,
+      x + (x === x1 ? -padding : padding),
+      y + (y === y1 ? -padding : padding),
+      handleSize
+    )
+  );
+};
+
 export const renderTextStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: TextStroke,
-  focusedStroke?: TextStroke
+  focusedStrokes: StrokeType[]
 ) => {
-  console.log("rendering a free stroke");
   ctx.fillStyle = stroke.color;
   ctx.font = `${stroke.size}px Arial`;
   ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
-
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
-};
-
-export const renderSelectBox = (
-  ctx: CanvasRenderingContext2D,
-  stroke: FreeStroke | TextStroke | LineStroke | ShapeStroke
-) => {
-  const [x1, y1, x2, y2] = stroke.getBoundingBox(ctx);
-  ctx.beginPath();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "#9191ffff";
-  ctx.strokeRect(x1 - 5, y1 - 5, x2 - x1 + 10, y2 - y1 + 10);
-  ctx.stroke();
+  if (focusedStrokes.some((s) => s.id === stroke.id))
+    renderBoundingBox(ctx, stroke);
 };
 
 export const renderFreeStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: FreeStroke,
-  focusedStroke?: FreeStroke
+  focusedStrokes: StrokeType[]
 ) => {
-  if (stroke.points.length === 0) return;
-
+  if (!stroke.points.length) return;
   ctx.beginPath();
   ctx.strokeStyle = stroke.color;
   ctx.lineWidth = stroke.size;
   ctx.moveTo(stroke.points[0][0], stroke.points[0][1]);
-  for (const point of stroke.points) {
-    ctx.lineTo(point[0], point[1]);
-  }
-
+  stroke.points.forEach((point) => ctx.lineTo(point[0], point[1]));
   ctx.stroke();
-
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
+  if (focusedStrokes.some((s) => s.id === stroke.id))
+    renderBoundingBox(ctx, stroke);
 };
 
 export const renderLineStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: LineStroke,
-  focusedStroke?: LineStroke
+  focusedStrokes: StrokeType[]
 ) => {
   ctx.beginPath();
   ctx.strokeStyle = stroke.color;
@@ -60,49 +90,56 @@ export const renderLineStroke = (
   ctx.moveTo(...stroke.startPoint);
   ctx.lineTo(...stroke.endPoint);
   ctx.stroke();
+  if (focusedStrokes.some((s) => s.id === stroke.id))
+    renderBoundingBox(ctx, stroke);
+};
 
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
+export const renderSelectionBox = (
+  ctx: CanvasRenderingContext2D,
+  stroke: ShapeStroke
+) => {
+  const [x1, y1] = stroke.origin;
+  const [x2, y2] = stroke.termination;
+  ctx.strokeStyle = BOX_BORDER;
+  ctx.lineWidth = BOX_BORDER_WIDTH;
+  ctx.fillStyle = SELECTION_BOX_FILL;
+  ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+  ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 };
 
 export const renderShapeStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: ShapeStroke,
-  focusedStroke?: ShapeStroke
+  focusedStrokes: StrokeType[]
 ) => {
-  ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.lineSize;
+  if (stroke.id === "selectbox") return;
 
+  ctx.beginPath();
   const [x1, y1] = stroke.origin;
   const [x2, y2] = stroke.termination;
-  const centerX = (x1 + x2) / 2;
-  const centerY = (y1 + y2) / 2;
+  const [centerX, centerY] = [(x1 + x2) / 2, (y1 + y2) / 2];
+  const [w, h] = [Math.abs(x2 - x1), Math.abs(y2 - y1)];
 
   switch (stroke.type) {
     case "square":
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.lineSize;
       ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
       break;
     case "ellipse":
-      ctx.ellipse(
-        centerX,
-        centerY,
-        Math.abs(x2 - x1) / 2,
-        Math.abs(y2 - y1) / 2,
-        0,
-        0,
-        2 * Math.PI
-      );
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.lineSize;
+      ctx.ellipse(centerX, centerY, w / 2, h / 2, 0, 0, 2 * Math.PI);
+      ctx.stroke();
       break;
     case "circle":
-      const radius = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2;
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.lineSize;
+      ctx.arc(centerX, centerY, Math.min(w, h) / 2, 0, 2 * Math.PI);
+      ctx.stroke();
       break;
   }
-  ctx.stroke();
 
-  if (stroke.id === focusedStroke?.id) {
-    renderSelectBox(ctx, stroke);
-  }
+  if (focusedStrokes.some((s) => s.id === stroke.id))
+    renderBoundingBox(ctx, stroke);
 };
