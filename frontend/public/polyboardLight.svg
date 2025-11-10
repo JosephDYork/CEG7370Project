@@ -6,7 +6,7 @@
    overflow="hidden"
    version="1.1"
    id="svg5"
-   sodipodi:docname="polyboard.svg"
+   sodipodi:docname="polyboardLight.svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -39,14 +39,14 @@
      font-size="73px"
      transform="translate(26.2805,99.1259)"
      id="text4"
-     style="fill:#000000;fill-opacity:1">Polyboard</text><g
+     style="fill:#ffffff;fill-opacity:1">Polyboard</text><g
      id="g1"
-     style="fill:#000000;fill-opacity:1"><path
+     style="fill:#ffffff;fill-opacity:1"><path
        d="M 24.2145,33.3349 C 18.0576,39.477 13.7814,40.271 13.7814,40.271 12.9666,45.3318 10.968,50.1285 7.94837,54.2706 l 1.31521,1.3158 8.25202,-8.2526 c -0.3584,-0.8383 0.0307,-1.8084 0.869,-2.1668 0.8383,-0.3583 1.8084,0.0308 2.1667,0.869 0.3584,0.8383 -0.0307,1.8084 -0.869,2.1668 -0.4145,0.1772 -0.8833,0.1772 -1.2977,0 l -8.252,8.2526 1.3152,1.3152 c 4.1422,-3.0199 8.9391,-5.0184 14.0002,-5.833 0,0 0.7891,-4.2818 6.9312,-10.4356 z"
        transform="matrix(1,0,0,1.01696,337.2005,47.1259)"
        id="path1"
-       style="fill:#000000;fill-opacity:1" /><path
+       style="fill:#ffffff;fill-opacity:1" /><path
        d="M 51.6248,1.18061 C 44.3113,9.04725 24.8229,30.4101 24.8229,30.4101 l 10.4995,10.5001 c 0,0 14.6012,-15.8519 16.3024,-17.4148 z"
        transform="matrix(1,0,0,1.01696,337.2005,47.1259)"
        id="path2"
-       style="fill:#000000;fill-opacity:1" /></g></svg>
+       style="fill:#ffffff;fill-opacity:1" /></g></svg>

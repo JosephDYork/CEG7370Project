@@ -1,5 +1,9 @@
 <p align="center"> 
-    <img src="frontend/public/polyboard.svg" alt="Polyboard Logo" height="640px" width="320px">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="frontend/public/polyboardLight.svg">
+      <source media="(prefers-color-scheme: light)" srcset="frontend/public/polyboard.svg">
+      <img src="frontend/public/polyboard.svg" alt="Polyboard Logo" height="640px" width="320px">
+    </picture>
 </p>
 
 <h1 align="center"> 
