@@ -2,7 +2,11 @@ import { useRef, useEffect, useState } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
-import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../../strokes";
+import { FreeStroke } from "../../models/free-stroke";
+import { TextStroke } from "../../models/text-stroke";
+import { LineStroke } from "../../models/line-stroke";
+import { ShapeStroke } from "../../models/shape-stroke";
+import type { StrokeType } from "../../models/strokes";
 import { useMouseEvents } from "../../hooks/mouse-events";
 import {
   renderFreeStroke,
@@ -36,8 +40,7 @@ const Whiteboard = () => {
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: (FreeStroke | TextStroke | LineStroke | ShapeStroke)[] =
-      [];
+    const allStrokes: StrokeType[] = [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -59,36 +62,37 @@ const Whiteboard = () => {
     drawTextCursor();
 
     if (
-      currentStroke instanceof ShapeStroke &&
+      currentStroke &&
+      currentStroke.type === "shape" &&
       currentStroke.id === "selectbox"
     ) {
-      renderSelectionBox(ctx, currentStroke);
+      renderSelectionBox(ctx, currentStroke as ShapeStroke);
     }
 
     for (const stroke of allStrokes) {
-      switch (stroke.constructor) {
-        case TextStroke:
+      switch (stroke.type) {
+        case "text":
           renderTextStroke(
             ctx,
             stroke as TextStroke,
             editorState.focusedStrokes
           );
           break;
-        case FreeStroke:
+        case "free":
           renderFreeStroke(
             ctx,
             stroke as FreeStroke,
             editorState.focusedStrokes
           );
           break;
-        case LineStroke:
+        case "line":
           renderLineStroke(
             ctx,
             stroke as LineStroke,
             editorState.focusedStrokes
           );
           break;
-        case ShapeStroke:
+        case "shape":
           renderShapeStroke(
             ctx,
             stroke as ShapeStroke,
@@ -108,25 +112,26 @@ const Whiteboard = () => {
 
     if (
       editorState.currentStroke &&
-      editorState.currentStroke instanceof TextStroke &&
+      editorState.currentStroke.type === "text" &&
       showCursor
     ) {
+      const textStroke = editorState.currentStroke as TextStroke;
       ctx.beginPath();
       ctx.lineWidth = 1;
       ctx.strokeStyle = "#000000";
 
       ctx.moveTo(
-        editorState.currentStroke.position[0] +
-          ctx.measureText(editorState.currentStroke.text).width +
+        textStroke.position[0] +
+          ctx.measureText(textStroke.text).width +
           2,
-        editorState.currentStroke.position[1] + 2
+        textStroke.position[1] + 2
       );
       ctx.lineTo(
-        editorState.currentStroke.position[0] +
-          ctx.measureText(editorState.currentStroke.text).width +
+        textStroke.position[0] +
+          ctx.measureText(textStroke.text).width +
           2,
-        editorState.currentStroke.position[1] -
-          editorState.currentStroke.size +
+        textStroke.position[1] -
+          textStroke.size +
           3
       );
       ctx.stroke();
@@ -181,7 +186,7 @@ const Whiteboard = () => {
   useEffect(() => {
     if (
       editorState.currentStroke &&
-      editorState.currentStroke instanceof TextStroke
+      editorState.currentStroke.type === "text"
     ) {
       const intervalId = setInterval(() => {
         setShowCursor((prev) => !prev);

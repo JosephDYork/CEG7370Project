@@ -1,4 +1,4 @@
-import { TextStroke } from "../strokes";
+import { TextStroke } from "../models/text-stroke";
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
 import { useWebSocket } from "./web-sockets";
@@ -9,20 +9,23 @@ export const useKeyboardEvents = () => {
   const { currentStroke, setCurrentStroke } = useEditorStore();
 
   const updateTextStroke = (text: string) => {
-    if (!(currentStroke instanceof TextStroke)) return;
+    if (currentStroke?.type !== "text") return;
 
+    const textStroke = currentStroke as TextStroke;
     const updatedStroke = new TextStroke(
-      currentStroke.id,
-      currentStroke.color,
-      currentStroke.size,
-      currentStroke.position,
+      textStroke.id,
+      textStroke.color,
+      textStroke.size,
+      textStroke.position,
       text
     );
     setCurrentStroke(updatedStroke);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!(currentStroke instanceof TextStroke)) return;
+    if (currentStroke?.type !== "text") return;
+
+    const textStroke = currentStroke as TextStroke;
 
     switch (e.key) {
       case "Enter":
@@ -35,7 +38,7 @@ export const useKeyboardEvents = () => {
 
       case "Backspace":
         e.preventDefault();
-        updateTextStroke(currentStroke.text.slice(0, -1));
+        updateTextStroke(textStroke.text.slice(0, -1));
         break;
 
       case "Escape":
@@ -44,7 +47,7 @@ export const useKeyboardEvents = () => {
 
       default:
         if (e.key.length === 1) {
-          updateTextStroke(currentStroke.text + e.key);
+          updateTextStroke(textStroke.text + e.key);
         }
         break;
     }

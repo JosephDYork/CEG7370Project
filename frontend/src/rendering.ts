@@ -1,22 +1,13 @@
-import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "./strokes";
-
-type StrokeType = FreeStroke | TextStroke | LineStroke | ShapeStroke;
+import { FreeStroke } from "./models/free-stroke";
+import { TextStroke } from "./models/text-stroke";
+import { LineStroke } from "./models/line-stroke";
+import { ShapeStroke } from "./models/shape-stroke";
+import type { StrokeType } from "./models/strokes";
 
 const BOX_BORDER = "#9191ff";
 const BOX_BORDER_WIDTH = 1;
 const HANDLE_FILL = "#ffffff";
 const SELECTION_BOX_FILL = "#9191ff1a";
-
-const drawHandle = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number
-) => {
-  const half = size / 2;
-  ctx.fillRect(x - half, y - half, size, size);
-  ctx.strokeRect(x - half, y - half, size, size);
-};
 
 export const renderBoundingBox = (
   ctx: CanvasRenderingContext2D,
@@ -28,6 +19,7 @@ export const renderBoundingBox = (
 
   ctx.strokeStyle = BOX_BORDER;
   ctx.lineWidth = BOX_BORDER_WIDTH;
+  ctx.fillStyle = HANDLE_FILL;
   ctx.strokeRect(
     x1 - padding,
     y1 - padding,
@@ -35,20 +27,27 @@ export const renderBoundingBox = (
     y2 - y1 + 2 * padding
   );
 
-  ctx.fillStyle = HANDLE_FILL;
   [
     [x1, y1],
     [x2, y1],
     [x1, y2],
     [x2, y2],
-  ].forEach(([x, y]) =>
-    drawHandle(
-      ctx,
-      x + (x === x1 ? -padding : padding),
-      y + (y === y1 ? -padding : padding),
+  ].forEach(([x, y]) => {
+    const handleX = x + (x === x1 ? -padding : padding);
+    const handleY = y + (y === y1 ? -padding : padding);
+    ctx.fillRect(
+      handleX - handleSize / 2,
+      handleY - handleSize / 2,
+      handleSize,
       handleSize
-    )
-  );
+    );
+    ctx.strokeRect(
+      handleX - handleSize / 2,
+      handleY - handleSize / 2,
+      handleSize,
+      handleSize
+    );
+  });
 };
 
 export const renderTextStroke = (
@@ -120,7 +119,7 @@ export const renderShapeStroke = (
   const [centerX, centerY] = [(x1 + x2) / 2, (y1 + y2) / 2];
   const [w, h] = [Math.abs(x2 - x1), Math.abs(y2 - y1)];
 
-  switch (stroke.type) {
+  switch (stroke.shapeType) {
     case "square":
       ctx.strokeStyle = stroke.color;
       ctx.lineWidth = stroke.lineSize;

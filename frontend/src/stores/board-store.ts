@@ -1,7 +1,5 @@
 import { create } from "zustand";
-import { FreeStroke, TextStroke, LineStroke, ShapeStroke } from "../strokes";
-
-type StrokeType = FreeStroke | TextStroke | LineStroke | ShapeStroke;
+import type { StrokeType } from "../models/strokes";
 
 interface boardState {
   version: number;

@@ -1,7 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useBoardStore } from "../stores/board-store";
-import { useChatStore, ChatMessage } from "../stores/chat-store";
-import { FreeStroke } from "../strokes";
+import { useChatStore } from "../stores/chat-store";
+import { FreeStroke } from "../models/free-stroke";
+import { TextStroke } from "../models/text-stroke";
+import { LineStroke } from "../models/line-stroke";
+import { ShapeStroke } from "../models/shape-stroke";
+import type { StrokeType } from "../models/strokes";
 
 export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -52,21 +56,33 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
           `updating to a total of ${msg.board_state.strokes.length} strokes`
         );
 
-        var incoming_strokes = [];
+        const incomingStrokes: StrokeType[] = [];
         for (const stroke of msg.board_state.strokes) {
-          if (stroke.id.includes("pen")) {
-            incoming_strokes.push(
-              new FreeStroke(
-                stroke.id,
-                stroke.color,
-                stroke.size,
-                stroke.points
-              )
-            );
+          switch (stroke.type) {
+            case "free":
+              incomingStrokes.push(
+                new FreeStroke(stroke.id, stroke.color, stroke.size, stroke.points)
+              );
+              break;
+            case "text":
+              incomingStrokes.push(
+                new TextStroke(stroke.id, stroke.color, stroke.size, stroke.position, stroke.text)
+              );
+              break;
+            case "line":
+              incomingStrokes.push(
+                new LineStroke(stroke.id, stroke.color, stroke.size, stroke.startPoint, stroke.endPoint)
+              );
+              break;
+            case "shape":
+              incomingStrokes.push(
+                new ShapeStroke(stroke.id, stroke.shapeType, stroke.color, stroke.lineSize, stroke.origin, stroke.termination)
+              );
+              break;
           }
         }
 
-        updateAllStrokes(incoming_strokes);
+        updateAllStrokes(incomingStrokes);
       }
     };
 
