@@ -131,12 +131,6 @@ export const renderShapeStroke = (
       ctx.ellipse(centerX, centerY, w / 2, h / 2, 0, 0, 2 * Math.PI);
       ctx.stroke();
       break;
-    case "circle":
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.lineSize;
-      ctx.arc(centerX, centerY, Math.min(w, h) / 2, 0, 2 * Math.PI);
-      ctx.stroke();
-      break;
   }
 
   if (focusedStrokes.some((s) => s.id === stroke.id))

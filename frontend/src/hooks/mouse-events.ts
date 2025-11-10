@@ -6,7 +6,7 @@ import { FreeStroke } from "../models/free-stroke";
 import { TextStroke } from "../models/text-stroke";
 import { LineStroke } from "../models/line-stroke";
 import { ShapeStroke } from "../models/shape-stroke";
-import type { StrokeType } from "../models/strokes";
+import type { Point, StrokeType } from "../models/strokes";
 import { useWebSocket } from "./web-sockets";
 import { useSelectionTool } from "./selection";
 
@@ -31,7 +31,7 @@ export const useMouseEvents = (
 
   const getCanvasPosition = (
     e: React.MouseEvent<HTMLCanvasElement>
-  ): [number, number] => {
+  ): Point => {
     if (!canvasRef.current) return [0, 0];
     const rect = canvasRef.current.getBoundingClientRect();
     return [e.clientX - rect.left, e.clientY - rect.top];
@@ -45,7 +45,7 @@ export const useMouseEvents = (
     }
   };
 
-  const createStroke = (coords: [number, number], strokeId: string) => {
+  const createStroke = (coords: Point, strokeId: string) => {
     const [x, y] = coords;
 
     switch (brushTool) {
@@ -57,7 +57,6 @@ export const useMouseEvents = (
         return new LineStroke(strokeId, brushColor, brushSize, [x, y], [x, y]);
       case "square":
       case "ellipse":
-      case "circle":
         return new ShapeStroke(
           strokeId,
           brushTool,
@@ -70,6 +69,32 @@ export const useMouseEvents = (
         return selection.startSelectBox([x, y]);
       default:
         return null;
+    }
+  };
+
+  const updateCurrentStroke = (coords: Point, ctx: CanvasRenderingContext2D) => {
+    if (!currentStroke) return;
+
+    switch (currentStroke.type) {
+      case "free":
+        const freeStroke = currentStroke as FreeStroke;
+        const updatedFreeStroke = freeStroke.addPoint(coords[0], coords[1]);
+        setCurrentStroke(updatedFreeStroke);
+        break;
+      case "line":
+        const lineStroke = currentStroke as LineStroke;
+        const updatedLineStroke = lineStroke.updateEndPoint(coords[0], coords[1]);
+        setCurrentStroke(updatedLineStroke);
+        break;
+      case "shape":
+        const shapeStroke = currentStroke as ShapeStroke;
+        if (selection.selectBoxExists) {
+          selection.updateSelectBox(shapeStroke, coords, ctx);
+        } else {
+          const updatedShapeStroke = shapeStroke.updateTermination(coords[0], coords[1]);
+          setCurrentStroke(updatedShapeStroke);
+        }
+        break;
     }
   };
 
@@ -130,33 +155,13 @@ export const useMouseEvents = (
 
     if (!isDown || !currentStroke) return;
 
-    if (currentStroke instanceof FreeStroke) {
-      const updatedStroke = currentStroke.addPoint(coords[0], coords[1]);
-      setCurrentStroke(updatedStroke);
-    } else if (currentStroke instanceof LineStroke) {
-      const updatedStroke = currentStroke.updateEndPoint(coords[0], coords[1]);
-      setCurrentStroke(updatedStroke);
-    } else if (currentStroke instanceof ShapeStroke) {
-      if (selection.selectBoxExists) {
-        selection.updateSelectBox(currentStroke, coords, ctx);
-      } else {
-        const updatedStroke = currentStroke.updateTermination(
-          coords[0],
-          coords[1]
-        );
-        setCurrentStroke(updatedStroke);
-      }
-    }
+    updateCurrentStroke(coords, ctx);
   };
 
   const handleMouseUp = () => {
     setCursorDown(false);
 
-    if (
-      currentStroke &&
-      !(currentStroke instanceof TextStroke) &&
-      !selection.selectBoxExists
-    ) {
+    if (currentStroke && !(currentStroke instanceof TextStroke) && !selection.selectBoxExists) {
       finishStroke(currentStroke);
     }
 
@@ -180,14 +185,20 @@ export const useMouseEvents = (
     }
     setHoveringTranslatable(false);
 
-    if (
-      currentStroke &&
-      (currentStroke instanceof FreeStroke ||
-        currentStroke instanceof LineStroke)
-    ) {
-      finishStroke(currentStroke);
-    } else if (currentStroke && selection.selectBoxExists) {
-      selection.endSelectBox();
+    if (currentStroke) {
+      switch (currentStroke.type) {
+        case "free":
+        case "line":
+          finishStroke(currentStroke);
+          break;
+        case "shape":
+          if (selection.selectBoxExists) {
+            selection.endSelectBox();
+          }
+          break;
+        default:
+          break;
+      }
     }
 
     if (selection.isTranslating) {

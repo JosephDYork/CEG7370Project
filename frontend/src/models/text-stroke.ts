@@ -61,4 +61,14 @@ export class TextStroke implements ITextStroke {
     const [x1, y1, x2, y2] = this.getBoundingBox(ctx);
     return x >= x1 && x <= x2 && y >= y1 && y <= y2;
   }
+
+  withUpdates(updates: { color?: string; size?: number }): TextStroke {
+    return new TextStroke(
+      this.id,
+      updates.color ?? this.color,
+      updates.size ?? this.size,
+      this.position,
+      this.text
+    );
+  }
 }

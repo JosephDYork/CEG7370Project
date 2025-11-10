@@ -29,6 +29,16 @@ export class LineStroke implements ILineStroke {
     this.endPoint = endPoint;
   }
 
+  withUpdates(updates: { color?: string; size?: number }): LineStroke {
+    return new LineStroke(
+      this.id,
+      updates.color ?? this.color,
+      updates.size ?? this.size,
+      this.startPoint,
+      this.endPoint
+    );
+  }
+
   updateEndPoint(x: number, y: number): LineStroke {
     return new LineStroke(this.id, this.color, this.size, this.startPoint, [
       x,

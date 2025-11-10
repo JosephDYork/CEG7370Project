@@ -19,4 +19,5 @@ export interface Stroke {
     tolerance?: number,
     ctx?: CanvasRenderingContext2D
   ): boolean;
+  withUpdates(updates: { color?: string; size?: number }): StrokeType;
 }

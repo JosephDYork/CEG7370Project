@@ -90,4 +90,13 @@ export class FreeStroke implements IFreeStroke {
       return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
     });
   }
+
+  withUpdates(updates: { color?: string; size?: number }): FreeStroke {
+    return new FreeStroke(
+      this.id,
+      updates.color ?? this.color,
+      updates.size ?? this.size,
+      this.points
+    );
+  }
 }

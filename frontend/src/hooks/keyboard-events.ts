@@ -1,12 +1,17 @@
-import { TextStroke } from "../models/text-stroke";
+import { TextStroke, type ITextStroke } from "../models/text-stroke";
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
 import { useWebSocket } from "./web-sockets";
 
 export const useKeyboardEvents = () => {
-  const { addStroke } = useBoardStore();
+  const { strokes, updateAllStrokes, addStroke } = useBoardStore();
   const { sendBoardUpdate } = useWebSocket();
-  const { currentStroke, setCurrentStroke } = useEditorStore();
+  const {
+    currentStroke,
+    focusedStrokes,
+    clearFocusedStrokes,
+    setCurrentStroke,
+  } = useEditorStore();
 
   const updateTextStroke = (text: string) => {
     if (currentStroke?.type !== "text") return;
@@ -22,12 +27,19 @@ export const useKeyboardEvents = () => {
     setCurrentStroke(updatedStroke);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (currentStroke?.type !== "text") return;
+  const deleteFocusedStrokes = () => {
+    const remainingStrokes = strokes.filter(
+      (stroke) => !focusedStrokes.some((focused) => focused.id === stroke.id)
+    );
+    updateAllStrokes(remainingStrokes);
+    sendBoardUpdate();
+    setCurrentStroke(null);
+  };
 
-    const textStroke = currentStroke as TextStroke;
+  const handleTextInput = (key: string) => {
+    const textStroke = currentStroke as ITextStroke;
 
-    switch (e.key) {
+    switch (key) {
       case "Enter":
         if (currentStroke) {
           addStroke(currentStroke);
@@ -35,21 +47,37 @@ export const useKeyboardEvents = () => {
           setCurrentStroke(null);
         }
         break;
-
       case "Backspace":
-        e.preventDefault();
         updateTextStroke(textStroke.text.slice(0, -1));
         break;
-
       case "Escape":
         setCurrentStroke(null);
         break;
-
       default:
-        if (e.key.length === 1) {
-          updateTextStroke(textStroke.text + e.key);
+        if (key.length === 1) {
+          updateTextStroke(textStroke.text + key);
         }
         break;
+    }
+  };
+
+  const handleNonTextInput = (key: string) => {
+    switch (key) {
+      case "Delete":
+        deleteFocusedStrokes();
+        break;
+      case "Escape":
+        clearFocusedStrokes();
+        setCurrentStroke(null);
+        break;
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (currentStroke?.type === "text") {
+      handleTextInput(e.key);
+    } else {
+      handleNonTextInput(e.key);
     }
   };
 

@@ -1,6 +1,6 @@
 import type { Stroke, Point, BoundingBox } from "./strokes";
 
-export type ShapeType = "square" | "ellipse" | "circle";
+export type ShapeType = "square" | "ellipse";
 
 export interface IShapeStroke extends Stroke {
   type: "shape";
@@ -33,6 +33,17 @@ export class ShapeStroke implements IShapeStroke {
     this.lineSize = lineSize;
     this.origin = origin;
     this.termination = termination;
+  }
+
+  withUpdates(updates: { color?: string; size?: number }): ShapeStroke {
+    return new ShapeStroke(
+      this.id,
+      this.shapeType,
+      updates.color ?? this.color,
+      updates.size ?? this.lineSize,
+      this.origin,
+      this.termination
+    );
   }
 
   updateTermination(x: number, y: number): ShapeStroke {
@@ -72,8 +83,6 @@ export class ShapeStroke implements IShapeStroke {
     switch (this.shapeType) {
       case "square":
         return this.checkPointNearRectangle(point, tolerance);
-      case "circle":
-        return this.checkPointNearCircle(point, tolerance);
       case "ellipse":
         return this.checkPointNearEllipse(point, tolerance);
       default:
@@ -104,19 +113,6 @@ export class ShapeStroke implements IShapeStroke {
       this.checkPointNearLine(point, [x2, y2], [x1, y2], tolerance) ||
       this.checkPointNearLine(point, [x1, y2], [x1, y1], tolerance)
     );
-  }
-
-  private checkPointNearCircle(point: Point, tolerance: number): boolean {
-    const [x, y] = point;
-    const [x1, y1] = this.origin;
-    const [x2, y2] = this.termination;
-
-    const centerX = (x1 + x2) / 2;
-    const centerY = (y1 + y2) / 2;
-    const radius = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2;
-    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-
-    return Math.abs(distance - radius) <= tolerance;
   }
 
   private checkPointNearEllipse(point: Point, tolerance: number): boolean {

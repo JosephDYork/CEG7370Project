@@ -46,7 +46,7 @@
 ### Drawing Tools
 - **Pen Tool**: Freehand drawing with customizable colors and brush sizes.
 - **Text Tool**: Add typed text to your whiteboard.
-- **Shape Tools**: Draw lines, squares, circles, and ellipses.
+- **Shape Tools**: Draw lines, rectangles, and ellipses.
 - **Selection Tool**: Select and focus on specific strokes.
 - **Mathematical Symbols**: Quick access to common mathematical notation.
 ### Real-time Collaboration
