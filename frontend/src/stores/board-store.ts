@@ -11,10 +11,9 @@ interface boardState {
 interface boardActions {
   updateAllStrokes: (strokes: Array<StrokeType>) => void;
   addStroke: (stroke: StrokeType) => void;
-  removeStroke: (strokeId: string) => void;
   removeLastStroke: () => StrokeType | null;
-  getStrokeById: (id: string) => StrokeType | undefined;
   clearStrokes: () => void;
+  forceUpdate: () => void;
 }
 
 export const useBoardStore = create<boardState & boardActions>((set, get) => ({
@@ -31,12 +30,6 @@ export const useBoardStore = create<boardState & boardActions>((set, get) => ({
     set((state) => ({
       ...state,
       strokes: [...state.strokes, stroke],
-    })),
-
-  removeStroke: (strokeId) =>
-    set((state) => ({
-      ...state,
-      strokes: state.strokes.filter((s) => s.id !== strokeId),
     })),
 
   removeLastStroke: () => {
@@ -58,8 +51,9 @@ export const useBoardStore = create<boardState & boardActions>((set, get) => ({
       strokes: [],
     })),
 
-  getStrokeById: (id) => {
-    const state = get();
-    return state.strokes.find((s) => s.id === id);
-  },
+  forceUpdate: () =>
+    set((state) => ({
+      ...state,
+      strokes: [...state.strokes],
+    })),
 }));

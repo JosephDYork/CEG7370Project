@@ -16,6 +16,19 @@ export class FreeStroke {
     this.points = points;
   }
 
+  getCentroid(): [number, number] {
+    let sumX = 0;
+    let sumY = 0;
+    const numPoints = this.points.length;
+
+    for (const point of this.points) {
+      sumX += point[0];
+      sumY += point[1];
+    }
+
+    return [sumX / numPoints, sumY / numPoints];
+  }
+
   addPoint(pointX: number, pointY: number): void {
     this.points.push([pointX, pointY]);
   }
@@ -58,6 +71,10 @@ export class TextStroke {
     this.text = text;
   }
 
+  getCentroid(): [number, number] {
+    return [this.position[0], this.position[1] - this.size / 2];
+  }
+
   getBoundingBox(ctx: CanvasRenderingContext2D): [number, number, number, number] {
     ctx.font = `${this.size}px Arial`;
     const textWidth = ctx.measureText(this.text).width;
@@ -90,6 +107,12 @@ export class LineStroke {
     this.size = strokeSize;
     this.startPoint = startPoint;
     this.endPoint = endPoint;
+  }
+
+  getCentroid(): [number, number] {
+    const centerX = (this.startPoint[0] + this.endPoint[0]) / 2;
+    const centerY = (this.startPoint[1] + this.endPoint[1]) / 2;
+    return [centerX, centerY];
   }
 
   updateEndPoint(newEndX: number, newEndY: number): void {
@@ -127,6 +150,12 @@ export class ShapeStroke {
     this.color = strokeColor;
     this.lineSize = lineSize;
     (this.origin = origin), (this.termination = termination);
+  }
+
+  getCentroid(): [number, number] {
+    const centerX = (this.origin[0] + this.termination[0]) / 2;
+    const centerY = (this.origin[1] + this.termination[1]) / 2;
+    return [centerX, centerY];
   }
 
   updateTermination(newEndX: number, newEndY: number): void {

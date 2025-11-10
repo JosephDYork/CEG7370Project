@@ -4,9 +4,9 @@ import { useEditorStore } from "../stores/editor-store";
 export const useUndoRedo = () => {
   const { strokes, removeLastStroke, addStroke } = useBoardStore();
   const {
-    focusedStroke,
+    focusedStrokes,
     undoStack,
-    setFocusedStroke,
+    clearFocusedStrokes,
     addToUndoStack,
     removeFromUndoStack,
   } = useEditorStore();
@@ -16,8 +16,8 @@ export const useUndoRedo = () => {
 
     const lastStroke = removeLastStroke();
     if (lastStroke) {
-      if (lastStroke.id === focusedStroke?.id) {
-        setFocusedStroke(null);
+      if (focusedStrokes.some((s) => s.id === lastStroke.id)) {
+        clearFocusedStrokes();
       }
 
       addToUndoStack(lastStroke);

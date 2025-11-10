@@ -1,5 +1,3 @@
-import { renderToPipeableStream } from "react-dom/server";
-
 export const checkPointNearLine = (
   point: [number, number],
   lineStart: [number, number],
@@ -88,5 +86,29 @@ export const checkPointNearEllipse = (
 
   return (
     Math.abs(ellipseDistance - 1) <= tolerance / Math.min(radiusX, radiusY)
+  );
+};
+
+export const checkPointInsideRectangle = (
+  point: [number, number],
+  corner1: [number, number],
+  corner2: [number, number]
+): boolean => {
+  const [x, y] = point;
+  const [x1, y1] = corner1;
+  const [x2, y2] = corner2;
+
+  return x >= Math.min(x1, x2) && x <= Math.max(x1, x2) && y >= Math.min(y1, y2) && y <= Math.max(y1, y2);
+};
+
+export const checkRectangleInsideRectangle = (
+  innerCorner1: [number, number],
+  innerCorner2: [number, number],
+  outerCorner1: [number, number],
+  outerCorner2: [number, number]
+): boolean => {
+  return (
+    checkPointInsideRectangle(innerCorner1, outerCorner1, outerCorner2) &&
+    checkPointInsideRectangle(innerCorner2, outerCorner1, outerCorner2)
   );
 };
