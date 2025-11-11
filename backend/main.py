@@ -3,8 +3,8 @@ from typing import Set
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from typing import List, Annotated
-from fastapi.responses import HTMLResponse
+import os
+import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from board_store import BoardState
 from chat_store import ChatState
