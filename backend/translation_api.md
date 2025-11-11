@@ -1,0 +1,2 @@
+TRANSLATE_API_URL=https://translation.googleapis.com/language/translate/v2
+TRANSLATE_API_KEY=your_google_api_key_here
