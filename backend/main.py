@@ -111,10 +111,11 @@ async def websocket_endpoint(websocket: WebSocket):
         active_connections.discard(websocket)
 
 
+
+
 class TranslateRequest(BaseModel):
     text: str
     target_language: str
-    source_language: str = "auto"  # Optional, default to auto-detect
 
 
 class TranslateResponse(BaseModel):
@@ -156,6 +157,34 @@ async def translate_text(req: TranslateRequest):
             # On any error, return mock translation so UI remains responsive
             translated = f"{req.text} [translated to {req.target_language}]"
             return TranslateResponse(translated_text=translated)
+
+    if TRANSLATE_API_URL and TRANSLATE_API_KEY:
+        payload = {
+            "q": req.text,
+            "target": req.target_language,
+            "format": "text"
+        }
+        headers = {"Authorization": f"Bearer {TRANSLATE_API_KEY}"}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                TRANSLATE_API_URL,
+                params={"key": TRANSLATE_API_KEY},
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+            data = response.json()
+            translated = (
+                data.get("data", {})
+                .get("translations", [{}])[0]
+                .get("translatedText")
+            )
+            if translated:
+                return {"translated_text": translated}
+            else:
+                # Handle case where translation is not found in the response
+                translated = f"{req.text} [translated to {req.target_language}]"
+                return TranslateResponse(translated_text=translated)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
