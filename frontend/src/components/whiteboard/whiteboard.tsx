@@ -26,7 +26,7 @@ const Whiteboard = () => {
   const [showCursor, setShowCursor] = useState(true);
   const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
-  const { handleUndo, handleRedo } = useUndoRedo();
+  // const { handleUndo, handleRedo } = useUndoRedo();
   const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
     useMouseEvents(canvasRef);
 
@@ -194,16 +194,6 @@ const Whiteboard = () => {
 
   return (
     <div className="whiteboard-container">
-      <div className="whiteboard-header">
-        <button className="whiteboard-button" onClick={handleUndo}>
-          ↶ Undo
-        </button>
-        <button className="whiteboard-button" onClick={handleRedo}>
-          ↷ Redo
-        </button>
-        <button className="whiteboard-button">🔍−</button>
-        <button className="whiteboard-button">🔍+</button>
-      </div>
       <canvas
         ref={canvasRef}
         id="whiteboard-canvas"

@@ -1,66 +1,15 @@
 .whiteboard-container {
-  margin: 0.5rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: stretch;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  box-sizing: border-box;
-  flex: 1 1 0;
-}
-
-.whiteboard-header {
-  height: 3rem;
-  min-height: 3rem;
-  background: #f0fdfa;
-  border-radius: 0.5rem 0.5rem 0 0;
-  border-bottom: 2px solid #14b8a6;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.75rem;
-  padding: 0 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.whiteboard-button {
-  height: 2rem;
-  width: auto;
-  padding: 0 1rem;
-  border: 1px solid #dee2e6;
-  border-radius: 10px;
-  background-color: #f8f9fa;
-  color: #495057;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.79rem;
-  font-weight: normal;
-}
-
-.whiteboard-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.whiteboard-button:active {
-  transform: translateY(0);
-}
-
-.whiteboard-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
 }
 
 .whiteboard-canvas {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-  border-radius: 0 0 0.5rem 0.5rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
   cursor: crosshair;
+  display: block;
 }

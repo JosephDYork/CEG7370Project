@@ -1,10 +1,5 @@
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
-import { FreeStroke } from "../../models/free-stroke";
-import { TextStroke } from "../../models/text-stroke";
-import { LineStroke } from "../../models/line-stroke";
-import { ShapeStroke } from "../../models/shape-stroke";
-import type { StrokeType } from "../../models/strokes";
 import "./toolspanel.css";
 
 const mathSymbols = [
@@ -57,7 +52,7 @@ const ToolsPanel = () => {
   };
 
   return (
-    <div className="toolspanel-container">
+    <div className="toolspanel-container floating-ui">
       <h3 className="toolspanel-header">DRAWING TOOLS</h3>
       <button
         id="selectButton"

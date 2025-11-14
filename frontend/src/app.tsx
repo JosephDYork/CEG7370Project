@@ -19,13 +19,13 @@ const App = () => {
 
   return (
     <div className="app">
-      <Header />
+      <Whiteboard />
       <div className="main-content">
+        <Header />
         <ToolsPanel />
-        <Whiteboard />
         <ChatPanel />
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 };
