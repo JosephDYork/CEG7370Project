@@ -26,7 +26,7 @@ const Footer = () => {
   };
 
   return (
-    <div className="footer-container">
+    <div className="footer-container floating-ui">
       <div className="footer-status">
         <div className="connection-status" onClick={handleStatusClick}>
           <div className={`status-indicator ${getStatusClass()}`}></div>

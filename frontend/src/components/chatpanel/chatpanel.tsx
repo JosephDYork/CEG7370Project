@@ -54,7 +54,7 @@ const ChatPanel = () => {
   };
 
   return (
-    <div className="chatpanel-container">
+    <div className="chatpanel-container floating-ui">
       <div className="chatpanel-header">
         <div className="chat-title">
           <h3>Live Chat (Translated)</h3>
