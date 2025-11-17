@@ -126,6 +126,7 @@
   width: auto;
   min-width: fit-content;
   padding: 0.5rem 1rem;
+  color: black;
 }
 
 .header-button-reset:hover {
