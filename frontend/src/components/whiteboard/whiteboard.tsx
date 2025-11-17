@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
+import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
 import { FreeStroke } from "../../models/free-stroke";
 import { TextStroke } from "../../models/text-stroke";
@@ -26,14 +27,18 @@ const Whiteboard = () => {
   const [showCursor, setShowCursor] = useState(true);
   const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
+  const viewportState = useViewportStore((state) => state);
   // const { handleUndo, handleRedo } = useUndoRedo();
   const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
     useMouseEvents(canvasRef);
 
   const setCanvasSize = () => {
     if (canvasRef.current) {
-      canvasRef.current.width = canvasRef.current.clientWidth;
-      canvasRef.current.height = canvasRef.current.clientHeight;
+      const width = canvasRef.current.clientWidth;
+      const height = canvasRef.current.clientHeight;
+      canvasRef.current.width = width;
+      canvasRef.current.height = height;
+      viewportState.setDimensions(width, height);
     }
   };
 
@@ -55,10 +60,18 @@ const Whiteboard = () => {
       allStrokes.push(...boardState.strokes);
     }
 
+    // Clear canvas
     ctx.fillStyle = "rgba(255, 255, 255, 1)";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawGrid(ctx, canvas.width, canvas.height);
+
+    // Apply viewport transformation
+    ctx.save();
+    ctx.scale(viewportState.zoom, viewportState.zoom);
+    ctx.translate(-viewportState.offsetX, -viewportState.offsetY);
+
+    // Draw grid and content in world space
+    drawGrid(ctx);
     drawTextCursor();
 
     if (
@@ -101,6 +114,9 @@ const Whiteboard = () => {
           break;
       }
     }
+
+    // Restore context
+    ctx.restore();
   };
 
   const drawTextCursor = () => {
@@ -132,25 +148,28 @@ const Whiteboard = () => {
     }
   };
 
-  // Allows us to get the grid effect on the whiteboard. Mess with grid size to change spacing.
-  // Will probably need to adjust if we add a zoom feature.
-  const drawGrid = (
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number
-  ) => {
+  // Infinite grid that moves with the viewport
+  const drawGrid = (ctx: CanvasRenderingContext2D) => {
+    const bounds = viewportState.getVisibleBounds();
+    
     ctx.strokeStyle = GRID_COLOR;
-    ctx.lineWidth = 0.5;
+    ctx.lineWidth = 0.5 / viewportState.zoom; // Keep grid lines thin at any zoom
     ctx.beginPath();
 
-    for (let x = 0; x <= width; x += GRID_SIZE) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
+    // Calculate grid start positions aligned to GRID_SIZE
+    const startX = Math.floor(bounds.minX / GRID_SIZE) * GRID_SIZE;
+    const startY = Math.floor(bounds.minY / GRID_SIZE) * GRID_SIZE;
+
+    // Draw vertical lines
+    for (let x = startX; x <= bounds.maxX; x += GRID_SIZE) {
+      ctx.moveTo(x, bounds.minY);
+      ctx.lineTo(x, bounds.maxY);
     }
 
-    for (let y = 0; y <= height; y += GRID_SIZE) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+    // Draw horizontal lines
+    for (let y = startY; y <= bounds.maxY; y += GRID_SIZE) {
+      ctx.moveTo(bounds.minX, y);
+      ctx.lineTo(bounds.maxX, y);
     }
 
     ctx.stroke();
@@ -175,7 +194,7 @@ const Whiteboard = () => {
     if (!ctx) throw new Error("Could not get canvas context");
 
     drawCanvas();
-  }, [boardState, editorState, showCursor]);
+  }, [boardState, editorState, showCursor, viewportState]);
 
   useEffect(() => {
     if (

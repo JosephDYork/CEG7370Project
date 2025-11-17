@@ -9,9 +9,13 @@ export const useKeyboardEvents = () => {
   const {
     currentStroke,
     focusedStrokes,
+    brushTool,
     clearFocusedStrokes,
     setCurrentStroke,
+    setBrushTool,
   } = useEditorStore();
+
+  let previousTool: string | null = null;
 
   const updateTextStroke = (text: string) => {
     if (currentStroke?.type !== "text") return;
@@ -70,6 +74,20 @@ export const useKeyboardEvents = () => {
         clearFocusedStrokes();
         setCurrentStroke(null);
         break;
+      case " ": // Space key for pan
+        if (brushTool !== "pan") {
+          previousTool = brushTool;
+          setBrushTool("pan");
+        }
+        break;
+    }
+  };
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    // Release space key - return to previous tool
+    if (e.key === " " && brushTool === "pan" && previousTool) {
+      setBrushTool(previousTool);
+      previousTool = null;
     }
   };
 
@@ -81,5 +99,5 @@ export const useKeyboardEvents = () => {
     }
   };
 
-  return { handleKeyDown };
+  return { handleKeyDown, handleKeyUp };
 };

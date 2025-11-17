@@ -8,14 +8,16 @@ import Footer from "./components/footer/footer";
 import "./app.css";
 
 const App = () => {
-  const { handleKeyDown } = useKeyboardEvents();
+  const { handleKeyDown, handleKeyUp } = useKeyboardEvents();
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
     };
-  }, [handleKeyDown]);
+  }, [handleKeyDown, handleKeyUp]);
 
   return (
     <div className="app">

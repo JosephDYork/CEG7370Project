@@ -24,7 +24,8 @@ const Header = () => {
         <img src="/polyboard.svg" alt="Polyboard" className="header-logo" />
       </div>
       <div className="header-bar-wrapper">
-        <button title="Pan View" className={getFocusedButtonClass(currentTool !== "pan")}>
+        <button title="Pan View" className={getFocusedButtonClass(currentTool !== "pan")}
+        onClick={() => setBrushTool("pan")}>
           🖐
         </button>
         <button title="Select Tool" className={getFocusedButtonClass(currentTool !== "select")}

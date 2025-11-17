@@ -9,11 +9,13 @@ import { ShapeStroke } from "../models/shape-stroke";
 import type { Point, StrokeType } from "../models/strokes";
 import { useWebSocket } from "./web-sockets";
 import { useSelectionTool } from "./selection";
+import { usePanTool } from "./pan-tool";
 
 export const useMouseEvents = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>
 ) => {
   const selection = useSelectionTool();
+  const panTool = usePanTool();
   const { addStroke } = useBoardStore();
   const { sendBoardUpdate } = useWebSocket();
   const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
@@ -102,6 +104,12 @@ export const useMouseEvents = (
     const coords = getCanvasPosition(e);
     updateCursor(coords[0], coords[1], true);
 
+    // Handle pan tool
+    if (brushTool === "pan") {
+      panTool.startPan(coords[0], coords[1]);
+      return;
+    }
+
     if (brushTool === "select" && focusedStrokes.length > 0) {
       const ctx = canvasRef.current?.getContext("2d");
       if (
@@ -129,6 +137,15 @@ export const useMouseEvents = (
 
     const coords = getCanvasPosition(e);
     setCursorPosition(coords[0], coords[1]);
+
+    // Update cursor style for pan tool
+    if (brushTool === "pan") {
+      canvasRef.current.style.cursor = panTool.isPanning ? "grabbing" : "grab";
+      if (panTool.isPanning) {
+        panTool.updatePan(coords[0], coords[1]);
+      }
+      return;
+    }
 
     if (
       brushTool === "select" &&
@@ -161,6 +178,12 @@ export const useMouseEvents = (
   const handleMouseUp = () => {
     setCursorDown(false);
 
+    // End pan
+    if (brushTool === "pan") {
+      panTool.endPan();
+      return;
+    }
+
     if (currentStroke && !(currentStroke instanceof TextStroke) && !selection.selectBoxExists) {
       finishStroke(currentStroke);
     }
@@ -184,6 +207,11 @@ export const useMouseEvents = (
       canvasRef.current.style.cursor = "default";
     }
     setHoveringTranslatable(false);
+
+    // End pan on leave
+    if (brushTool === "pan") {
+      panTool.endPan();
+    }
 
     if (currentStroke) {
       switch (currentStroke.type) {
