@@ -122,6 +122,17 @@
   padding: 0.75rem;
 }
 
+.header-button-reset {
+  width: auto;
+  min-width: fit-content;
+  padding: 0.5rem 1rem;
+}
+
+.header-button-reset:hover {
+  background-color: #f0fdfa;
+  border-color: #0d9488;
+}
+
 .header-button-export {
   background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   color: white;

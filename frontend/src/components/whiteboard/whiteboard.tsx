@@ -42,6 +42,20 @@ const Whiteboard = () => {
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Get mouse position relative to canvas
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Zoom in/out based on wheel direction
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    viewportState.zoomAt([screenX, screenY], delta);
+  };
+
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
@@ -221,6 +235,7 @@ const Whiteboard = () => {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onWheel={handleWheel}
       />
     </div>
   );

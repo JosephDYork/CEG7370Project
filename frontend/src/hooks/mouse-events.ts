@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
 import { useCursorStore } from "../stores/cursor-store";
+import { useViewportStore } from "../stores/viewport-store";
 import { FreeStroke } from "../models/free-stroke";
 import { TextStroke } from "../models/text-stroke";
 import { LineStroke } from "../models/line-stroke";
@@ -16,6 +17,7 @@ export const useMouseEvents = (
 ) => {
   const selection = useSelectionTool();
   const panTool = usePanTool();
+  const viewport = useViewportStore();
   const { addStroke } = useBoardStore();
   const { sendBoardUpdate } = useWebSocket();
   const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
@@ -36,7 +38,10 @@ export const useMouseEvents = (
   ): Point => {
     if (!canvasRef.current) return [0, 0];
     const rect = canvasRef.current.getBoundingClientRect();
-    return [e.clientX - rect.left, e.clientY - rect.top];
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    // Convert screen coordinates to world coordinates
+    return viewport.screenToWorld([screenX, screenY]);
   };
 
   const finishStroke = (stroke: StrokeType) => {
@@ -101,30 +106,35 @@ export const useMouseEvents = (
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const coords = getCanvasPosition(e);
-    updateCursor(coords[0], coords[1], true);
+    const worldCoords = getCanvasPosition(e);
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const screenCoords: Point = [e.clientX - rect.left, e.clientY - rect.top];
+    updateCursor(screenCoords[0], screenCoords[1], true);
 
-    // Handle pan tool
+    // Handle pan tool (uses screen coords)
     if (brushTool === "pan") {
-      panTool.startPan(coords[0], coords[1]);
+      panTool.startPan(screenCoords[0], screenCoords[1]);
       return;
     }
 
+    // Handle selection (uses world coords)
     if (brushTool === "select" && focusedStrokes.length > 0) {
       const ctx = canvasRef.current?.getContext("2d");
       if (
         ctx &&
-        focusedStrokes.some((stroke) => stroke.isPointNear(coords, 10, ctx))
+        focusedStrokes.some((stroke) => stroke.isPointNear(worldCoords, 10, ctx))
       ) {
-        selection.startTranslation(coords);
+        selection.startTranslation(worldCoords);
         return;
       } else {
         clearFocusedStrokes();
       }
     }
 
+    // Create new stroke (uses world coords)
     const strokeId = `${brushTool}-${Date.now()}-${Math.random().toString(8)}`;
-    const newStroke = createStroke(coords, strokeId);
+    const newStroke = createStroke(worldCoords, strokeId);
     if (newStroke) {
       setCurrentStroke(newStroke);
     }
@@ -135,18 +145,21 @@ export const useMouseEvents = (
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
 
-    const coords = getCanvasPosition(e);
-    setCursorPosition(coords[0], coords[1]);
+    const worldCoords = getCanvasPosition(e);
+    const rect = canvasRef.current.getBoundingClientRect();
+    const screenCoords: Point = [e.clientX - rect.left, e.clientY - rect.top];
+    setCursorPosition(screenCoords[0], screenCoords[1]);
 
-    // Update cursor style for pan tool
+    // Update cursor style for pan tool (uses screen coords)
     if (brushTool === "pan") {
       canvasRef.current.style.cursor = panTool.isPanning ? "grabbing" : "grab";
       if (panTool.isPanning) {
-        panTool.updatePan(coords[0], coords[1]);
+        panTool.updatePan(screenCoords[0], screenCoords[1]);
       }
       return;
     }
 
+    // Handle selection hover (uses world coords)
     if (
       brushTool === "select" &&
       focusedStrokes.length > 0 &&
@@ -154,7 +167,7 @@ export const useMouseEvents = (
       !isDown
     ) {
       const strokeHovered = focusedStrokes.some((stroke) =>
-        stroke.isPointNear(coords, 10, ctx)
+        stroke.isPointNear(worldCoords, 10, ctx)
       );
       if (strokeHovered !== hoveringTranslatable) {
         setHoveringTranslatable(strokeHovered);
@@ -165,14 +178,16 @@ export const useMouseEvents = (
       canvasRef.current.style.cursor = "default";
     }
 
+    // Handle selection translation (uses world coords)
     if (selection.isTranslating && isDown && focusedStrokes.length > 0) {
-      selection.translateStrokes(coords, focusedStrokes);
+      selection.translateStrokes(worldCoords, focusedStrokes);
       return;
     }
 
     if (!isDown || !currentStroke) return;
 
-    updateCurrentStroke(coords, ctx);
+    // Update current stroke (uses world coords)
+    updateCurrentStroke(worldCoords, ctx);
   };
 
   const handleMouseUp = () => {
