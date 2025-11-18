@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useViewportStore } from "../stores/viewport-store";
 import { useEditorStore } from "../stores/editor-store";
 
@@ -5,24 +6,21 @@ export const usePanTool = () => {
   const { isPanning, pan, setIsPanning } = useViewportStore();
   const { brushTool } = useEditorStore();
 
-  let lastPanX = 0;
-  let lastPanY = 0;
+  const lastPanPos = useRef({ x: 0, y: 0 });
 
   const startPan = (x: number, y: number) => {
     if (brushTool === "pan") {
       setIsPanning(true);
-      lastPanX = x;
-      lastPanY = y;
+      lastPanPos.current = { x, y };
     }
   };
 
   const updatePan = (x: number, y: number) => {
     if (isPanning && brushTool === "pan") {
-      const dx = x - lastPanX;
-      const dy = y - lastPanY;
+      const dx = x - lastPanPos.current.x;
+      const dy = y - lastPanPos.current.y;
       pan(dx, dy);
-      lastPanX = x;
-      lastPanY = y;
+      lastPanPos.current = { x, y };
     }
   };
 
