@@ -24,6 +24,15 @@
   gap: 0.3rem;
 }
 
+.zoom-level {
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .connection-status {
   display: flex;
   align-items: center;

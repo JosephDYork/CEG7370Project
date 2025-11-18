@@ -1,11 +1,16 @@
 import "./footer.css";
 import { useCursorStore } from "../../stores/cursor-store";
+import { useViewportStore } from "../../stores/viewport-store";
 import { useWebSocket } from "../../hooks/web-sockets";
 
 const Footer = () => {
   const cursorState = useCursorStore((state) => state);
+  const viewport = useViewportStore();
   const { connectionStatus, connectWebSocket } = useWebSocket();
   const { isConnected, isConnecting } = connectionStatus;
+
+  // Convert screen cursor position to world coordinates
+  const [worldX, worldY] = viewport.screenToWorld([cursorState.x, cursorState.y]);
 
   const getStatusText = () => {
     if (isConnecting) return "Connecting...";
@@ -33,7 +38,10 @@ const Footer = () => {
           <span className="status-text">{getStatusText()}</span>
         </div>
         <span className="cursor-state">
-          ({Math.round(cursorState.x)}, {Math.round(cursorState.y)})
+          ({Math.round(worldX)}, {Math.round(worldY)})
+        </span>
+        <span className="zoom-level">
+          {Math.round(viewport.zoom * 100)}%
         </span>
       </div>
     </div>

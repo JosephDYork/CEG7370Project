@@ -2,6 +2,7 @@ import "./header.css";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useTranslationStore } from "../../stores/translation-store";
+import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
 
 const getFocusedButtonClass = (bool: boolean) => {
@@ -13,10 +14,15 @@ const Header = () => {
   const currentTool = useEditorStore((state) => state.brushTool);
   const setBrushTool = useEditorStore((state) => state.setBrushTool);
   const clearStrokes = useBoardStore((state) => state.clearStrokes);
+  const viewport = useViewportStore();
   const { handleUndo, handleRedo } = useUndoRedo();
   const setTargetLanguage = useTranslationStore(
     (state) => state.setTargetLanguage
   );
+
+  const handleResetView = () => {
+    viewport.resetViewport();
+  };
 
   return (
     <div className="header-container floating-ui">
@@ -24,7 +30,8 @@ const Header = () => {
         <img src="/polyboard.svg" alt="Polyboard" className="header-logo" />
       </div>
       <div className="header-bar-wrapper">
-        <button title="Pan View" className={getFocusedButtonClass(currentTool !== "pan")}>
+        <button title="Pan View" className={getFocusedButtonClass(currentTool !== "pan")}
+        onClick={() => setBrushTool("pan")}>
           🖐
         </button>
         <button title="Select Tool" className={getFocusedButtonClass(currentTool !== "select")}
@@ -88,6 +95,13 @@ const Header = () => {
         </div>
       </div>
       <div className="header-actions-section">
+        <button 
+          className="header-button header-button-reset"
+          onClick={handleResetView}
+          title="Reset View (Center & Zoom 100%)"
+        >
+          Reset View
+        </button>
         <button className="header-button header-button-export">
           Export PDF
         </button>
