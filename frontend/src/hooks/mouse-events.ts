@@ -18,17 +18,20 @@ export const useMouseEvents = (
   const selection = useSelectionTool();
   const panTool = usePanTool();
   const viewport = useViewportStore();
-  const { addStroke } = useBoardStore();
+  const { strokes, addStroke, removeStroke } = useBoardStore();
   const { sendBoardUpdate } = useWebSocket();
   const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
+  const [isErasing, setIsErasing] = useState(false);
   const {
     brushTool,
     brushSize,
     brushColor,
     currentStroke,
     focusedStrokes,
+    eraseStack,
     setCurrentStroke,
     clearFocusedStrokes,
+    clearEraseStack,
   } = useEditorStore();
   const { isDown, updateCursor, setCursorPosition, setCursorDown } =
     useCursorStore();
@@ -132,6 +135,28 @@ export const useMouseEvents = (
       }
     }
 
+    if (brushTool === "erase") {
+      setIsErasing(true);
+      console.log("Starting erase at", worldCoords);
+
+      for (const stroke of strokes) {
+        if (stroke.isPointNear(worldCoords, brushSize)) {
+          useEditorStore.getState().addToEraseStack(stroke);
+        }
+      }
+
+      // I know this is an ugly way to render a erase cirlce, but we are running out of
+      // time on this project.
+      setCurrentStroke(new ShapeStroke(
+        `erase-box-${Date.now()}`,
+        "ellipse",
+        "#000000",
+        1,
+        [worldCoords[0] - 5, worldCoords[1] - 5],
+        [worldCoords[0] + 5, worldCoords[1] + 5]
+      ))
+    }
+
     // Create new stroke (uses world coords)
     const strokeId = `${brushTool}-${Date.now()}-${Math.random().toString(8)}`;
     const newStroke = createStroke(worldCoords, strokeId);
@@ -178,6 +203,26 @@ export const useMouseEvents = (
       canvasRef.current.style.cursor = "default";
     }
 
+    if (brushTool === "erase" && isErasing && isDown) {
+      for (const stroke of strokes) {
+        if (stroke.isPointNear(worldCoords, brushSize)) {
+          useEditorStore.getState().addToEraseStack(stroke);
+        }
+      }
+ 
+      // Just keep manually redrawing the erase circle, since we are doing it this way.
+      setCurrentStroke(new ShapeStroke(
+        `erase-box-${Date.now()}`,
+        "ellipse",
+        "#000000",
+        1,
+        [worldCoords[0] - 5, worldCoords[1] - 5],
+        [worldCoords[0] + 5, worldCoords[1] + 5]
+      ))
+
+      return;
+    }
+
     // Handle selection translation (uses world coords)
     if (selection.isTranslating && isDown && focusedStrokes.length > 0) {
       selection.translateStrokes(worldCoords, focusedStrokes);
@@ -196,6 +241,21 @@ export const useMouseEvents = (
     // End pan
     if (brushTool === "pan") {
       panTool.endPan();
+      return;
+    }
+
+    // This needs to be done before the finish stroke call or we might accidentally
+    // add an erase circle to the stroke stack.
+    if (isErasing && brushTool === "erase") {
+      setIsErasing(false);
+      for (const stroke of eraseStack) {
+        removeStroke(stroke);
+      }
+
+      // Ensure we don't leave an erase circle artifact.
+      setCurrentStroke(null);
+      clearEraseStack();
+      sendBoardUpdate();
       return;
     }
 

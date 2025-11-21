@@ -6,6 +6,7 @@ interface EditorState {
   brushSize: number;
   brushColor: string;
   currentStroke: StrokeType | null;
+  eraseStack: StrokeType[];
   focusedStrokes: StrokeType[];
   undoStack: StrokeType[];
 }
@@ -17,6 +18,8 @@ interface EditorActions {
   setCurrentStroke: (stroke: StrokeType | null) => void;
   addFocusedStroke: (stroke: StrokeType) => void;
   clearFocusedStrokes: () => void;
+  addToEraseStack: (stroke: StrokeType) => void;
+  clearEraseStack: () => void;
   addToUndoStack: (stroke: StrokeType) => void;
   clearUndoStack: () => void;
   removeFromUndoStack: () => void;
@@ -27,6 +30,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set) => ({
   brushSize: 2,
   brushColor: "#000000",
   currentStroke: null,
+  eraseStack: [],
   focusedStrokes: [],
   undoStack: [],
 
@@ -64,6 +68,18 @@ export const useEditorStore = create<EditorState & EditorActions>((set) => ({
     set((state) => ({
       ...state,
       focusedStrokes: [],
+    })),
+
+  addToEraseStack: (stroke) =>
+    set((state) => ({
+      ...state,
+      eraseStack: [...(state as any).eraseStack, stroke],
+    })),
+
+  clearEraseStack: () =>
+    set((state) => ({
+      ...state,
+      eraseStack: [],
     })),
 
   addToUndoStack: (stroke) =>
