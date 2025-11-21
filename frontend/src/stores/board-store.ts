@@ -9,6 +9,7 @@ interface boardState {
 interface boardActions {
   updateAllStrokes: (strokes: Array<StrokeType>) => void;
   addStroke: (stroke: StrokeType) => void;
+  removeStroke: (stroke: StrokeType) => void;
   removeLastStroke: () => StrokeType | null;
   clearStrokes: () => void;
   forceUpdate: () => void;
@@ -28,6 +29,12 @@ export const useBoardStore = create<boardState & boardActions>((set, get) => ({
     set((state) => ({
       ...state,
       strokes: [...state.strokes, stroke],
+    })),
+
+  removeStroke: (stroke) =>
+    set((state) => ({
+      ...state,
+      strokes: state.strokes.filter((s) => s.id !== stroke.id),
     })),
 
   removeLastStroke: () => {

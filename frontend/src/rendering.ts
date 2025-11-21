@@ -9,6 +9,17 @@ const BOX_BORDER_WIDTH = 1;
 const HANDLE_FILL = "#ffffff";
 const SELECTION_BOX_FILL = "#9191ff1a";
 
+export const getPendingEraseStrokeStyle = (
+  Stroke: StrokeType,
+  eraseStacks: StrokeType[]
+): string => {
+  if (eraseStacks.some((s) => s.id === Stroke.id)) {
+    return Stroke.color + "80";
+  }
+
+  return Stroke.color;
+};
+
 export const renderBoundingBox = (
   ctx: CanvasRenderingContext2D,
   stroke: StrokeType
@@ -53,10 +64,11 @@ export const renderBoundingBox = (
 export const renderTextStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: TextStroke,
-  focusedStrokes: StrokeType[]
+  focusedStrokes: StrokeType[],
+  erasingStrokes: StrokeType[]
 ) => {
-  ctx.fillStyle = stroke.color;
   ctx.font = `${stroke.size}px Arial`;
+  ctx.fillStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
   ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
   if (focusedStrokes.some((s) => s.id === stroke.id))
     renderBoundingBox(ctx, stroke);
@@ -65,12 +77,13 @@ export const renderTextStroke = (
 export const renderFreeStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: FreeStroke,
-  focusedStrokes: StrokeType[]
+  focusedStrokes: StrokeType[],
+  erasingStrokes: StrokeType[]
 ) => {
   if (!stroke.points.length) return;
   ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
   ctx.lineWidth = stroke.size;
+  ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
   ctx.moveTo(stroke.points[0][0], stroke.points[0][1]);
   stroke.points.forEach((point) => ctx.lineTo(point[0], point[1]));
   ctx.stroke();
@@ -81,11 +94,13 @@ export const renderFreeStroke = (
 export const renderLineStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: LineStroke,
-  focusedStrokes: StrokeType[]
+  focusedStrokes: StrokeType[],
+  erasingStrokes: StrokeType[]
+
 ) => {
   ctx.beginPath();
-  ctx.strokeStyle = stroke.color;
   ctx.lineWidth = stroke.size;
+  ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
   ctx.moveTo(...stroke.startPoint);
   ctx.lineTo(...stroke.endPoint);
   ctx.stroke();
@@ -109,7 +124,8 @@ export const renderSelectionBox = (
 export const renderShapeStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: ShapeStroke,
-  focusedStrokes: StrokeType[]
+  focusedStrokes: StrokeType[],
+  erasingStrokes: StrokeType[]
 ) => {
   if (stroke.id === "selectbox") return;
 
@@ -121,13 +137,13 @@ export const renderShapeStroke = (
 
   switch (stroke.shapeType) {
     case "square":
-      ctx.strokeStyle = stroke.color;
       ctx.lineWidth = stroke.lineSize;
+      ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
       ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
       break;
     case "ellipse":
-      ctx.strokeStyle = stroke.color;
       ctx.lineWidth = stroke.lineSize;
+      ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
       ctx.ellipse(centerX, centerY, w / 2, h / 2, 0, 0, 2 * Math.PI);
       ctx.stroke();
       break;

@@ -102,28 +102,32 @@ const Whiteboard = () => {
           renderTextStroke(
             ctx,
             stroke as TextStroke,
-            editorState.focusedStrokes
+            editorState.focusedStrokes,
+            editorState.eraseStack
           );
           break;
         case "free":
           renderFreeStroke(
             ctx,
             stroke as FreeStroke,
-            editorState.focusedStrokes
+            editorState.focusedStrokes,
+            editorState.eraseStack
           );
           break;
         case "line":
           renderLineStroke(
             ctx,
             stroke as LineStroke,
-            editorState.focusedStrokes
+            editorState.focusedStrokes,
+            editorState.eraseStack
           );
           break;
         case "shape":
           renderShapeStroke(
             ctx,
             stroke as ShapeStroke,
-            editorState.focusedStrokes
+            editorState.focusedStrokes,
+            editorState.eraseStack
           );
           break;
       }
