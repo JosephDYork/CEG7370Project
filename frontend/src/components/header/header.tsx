@@ -4,6 +4,7 @@ import { useEditorStore } from "../../stores/editor-store";
 import { useTranslationStore } from "../../stores/translation-store";
 import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
+import { exportWhiteboardToSVG } from "../../utils/svg-export";
 
 const getFocusedButtonClass = (bool: boolean) => {
   return bool ? "header-bar-button" : "header-bar-button selected";
@@ -13,7 +14,7 @@ const Header = () => {
   const targetLanguage = useTranslationStore((state) => state.targetLanguage);
   const currentTool = useEditorStore((state) => state.brushTool);
   const setBrushTool = useEditorStore((state) => state.setBrushTool);
-  const clearStrokes = useBoardStore((state) => state.clearStrokes);
+  const { clearStrokes, strokes } = useBoardStore();
   const viewport = useViewportStore();
   const { handleUndo, handleRedo } = useUndoRedo();
   const setTargetLanguage = useTranslationStore(
@@ -22,6 +23,17 @@ const Header = () => {
 
   const handleResetView = () => {
     viewport.resetViewport();
+  };
+
+  const handleExportSVG = () => {
+    const defaultFilename = `polyboard-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.svg`;
+    const filename = prompt("Enter filename for SVG export:", defaultFilename);
+    
+    if (filename) {
+      // Ensure .svg extension
+      const finalFilename = filename.endsWith('.svg') ? filename : `${filename}.svg`;
+      exportWhiteboardToSVG(strokes, finalFilename);
+    }
   };
 
   return (
@@ -100,9 +112,13 @@ const Header = () => {
           onClick={handleResetView}
           title="Reset View (Center & Zoom 100%)"
         >
-          Reset View
+          🎯 Reset View
         </button>
-        <button className="header-button header-button-export">
+        <button 
+          className="header-button header-button-export"
+          onClick={handleExportSVG}
+          title="Export whiteboard as SVG"
+        >
           Export PDF
         </button>
       </div>
