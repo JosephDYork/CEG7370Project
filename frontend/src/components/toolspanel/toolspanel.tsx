@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
+import { useWebSocket } from "../../hooks/web-sockets"
+import { debounce } from "lodash";
 import "./toolspanel.css";
 
 const mathSymbols = [
@@ -22,33 +25,33 @@ const mathSymbols = [
 ];
 
 const ToolsPanel = () => {
-  const setBrushTool = useEditorStore((state) => state.setBrushTool);
-  const setBrushColor = useEditorStore((state) => state.setBrushColor);
-  const setBrushSize = useEditorStore((state) => state.setBrushSize);
-  const { strokes, updateAllStrokes } = useBoardStore();
-  const { focusedStrokes } = useEditorStore();
+  const { sendUpdateBoardMessage } = useWebSocket()
+  const { updateStrokes } = useBoardStore();
+  const { focusedStrokes, setBrushColor, setBrushSize } = useEditorStore();
+  const debouncedUpdate = useMemo(() => debounce(sendUpdateBoardMessage, 100), []);
 
-  const updateFocusedStrokes = (updates: { color?: string; size?: number }) => {
-    if (focusedStrokes.length > 0) {
-      const updatedStrokes = strokes.map((stroke) =>
-        focusedStrokes.some((focused) => focused.id === stroke.id)
-          ? stroke.withUpdates(updates)
-          : stroke
-      );
-      updateAllStrokes(updatedStrokes);
-    }
-  };
-
+  // We might want to just consider debouncing the whole function here tbh.
   const onBrushColorChange = (event: React.FormEvent<HTMLInputElement>) => {
     const color = event.currentTarget.value;
     setBrushColor(color);
-    updateFocusedStrokes({ color: color });
+    updateStrokes(
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ color: color }))
+    );
+    debouncedUpdate(
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ color: color }))
+    )
   };
 
+  // Same thing with this one, although it's not as pressing as the color picking experience.
   const onBrushSizeChange = (event: React.FormEvent<HTMLInputElement>) => {
     const size = parseInt(event.currentTarget.value, 10);
     setBrushSize(size);
-    updateFocusedStrokes({ size: size });
+    updateStrokes(
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size }))
+    );
+    debouncedUpdate(
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size }))
+    )
   };
 
   return (

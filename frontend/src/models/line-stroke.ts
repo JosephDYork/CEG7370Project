@@ -1,14 +1,13 @@
 import type { Stroke, Point, BoundingBox } from "./strokes";
 
 export interface ILineStroke extends Stroke {
-  type: "line";
   size: number;
   startPoint: Point;
   endPoint: Point;
 }
 
 export class LineStroke implements ILineStroke {
-  type = "line" as const;
+  type = "line";
   id: string;
   color: string;
   size: number;

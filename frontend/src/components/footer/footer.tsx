@@ -1,39 +1,28 @@
 import "./footer.css";
 import { useCursorStore } from "../../stores/cursor-store";
 import { useViewportStore } from "../../stores/viewport-store";
-import { useWebSocket } from "../../hooks/web-sockets";
+import { useEditorStore } from "../../stores/editor-store";
 
 const Footer = () => {
   const cursorState = useCursorStore((state) => state);
   const viewport = useViewportStore();
-  const { connectionStatus, connectWebSocket } = useWebSocket();
-  const { isConnected, isConnecting } = connectionStatus;
-
-  // Convert screen cursor position to world coordinates
+  const { isSocketConnected } = useEditorStore()
   const [worldX, worldY] = viewport.screenToWorld([cursorState.x, cursorState.y]);
 
   const getStatusText = () => {
-    if (isConnecting) return "Connecting...";
-    if (isConnected) return "Connected";
+    if (isSocketConnected) return "Connected";
     return "Disconnected";
   };
 
   const getStatusClass = () => {
-    if (isConnecting) return "status-connecting";
-    if (isConnected) return "status-connected";
+    if (isSocketConnected) return "status-connected";
     return "status-disconnected";
-  };
-
-  const handleStatusClick = () => {
-    if (!isConnecting) {
-      connectWebSocket();
-    }
   };
 
   return (
     <div className="footer-container floating-ui">
       <div className="footer-status">
-        <div className="connection-status" onClick={handleStatusClick}>
+        <div className="connection-status">
           <div className={`status-indicator ${getStatusClass()}`}></div>
           <span className="status-text">{getStatusText()}</span>
         </div>

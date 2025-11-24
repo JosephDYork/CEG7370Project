@@ -1,14 +1,13 @@
 import type { Stroke, Point, BoundingBox } from "./strokes";
 
 export interface ITextStroke extends Stroke {
-  type: "text";
   size: number;
   position: Point;
   text: string;
 }
 
 export class TextStroke implements ITextStroke {
-  type = "text" as const;
+  type = "text";
   id: string;
   color: string;
   size: number;

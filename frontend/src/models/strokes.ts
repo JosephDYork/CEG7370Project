@@ -1,17 +1,11 @@
-import type { IFreeStroke } from "./free-stroke";
-import type { ITextStroke } from "./text-stroke";
-import type { ILineStroke } from "./line-stroke";
-import type { IShapeStroke } from "./shape-stroke";
-
 export type Point = [number, number];
 export type BoundingBox = [number, number, number, number];
-export type StrokeTypeEnum = "free" | "text" | "line" | "shape";
-export type StrokeType = IFreeStroke | ITextStroke | ILineStroke | IShapeStroke;
 
 export interface Stroke {
   id: string;
   color: string;
-  type: StrokeTypeEnum;
+  size: number;
+  type: string;
   getCentroid(): Point;
   getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox;
   isPointNear(
@@ -19,5 +13,5 @@ export interface Stroke {
     tolerance?: number,
     ctx?: CanvasRenderingContext2D
   ): boolean;
-  withUpdates(updates: { color?: string; size?: number }): StrokeType;
+  withUpdates(updates: { color?: string; size?: number }): Stroke;
 }
