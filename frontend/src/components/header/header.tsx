@@ -12,12 +12,12 @@ const getFocusedButtonClass = (bool: boolean) => {
 }
 
 const Header = () => {
+  const viewport = useViewportStore();
   const { strokes, removeStrokes } = useBoardStore();
   const { brushTool, setBrushTool } = useEditorStore();
   const targetLanguage = useTranslationStore((state) => state.targetLanguage);
-  const { clearStrokes, strokes } = useBoardStore();
   const { handleUndo, handleRedo } = useUndoRedo();
-  const { sendUpdateBoardMessage } = useWebSocket();
+  const { sendRemoveBoardMessage } = useWebSocket();
   const setTargetLanguage = useTranslationStore(
     (state) => state.setTargetLanguage
   );
@@ -29,7 +29,7 @@ const Header = () => {
   const handleExportSVG = () => {
     const defaultFilename = `polyboard-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.svg`;
     const filename = prompt("Enter filename for SVG export:", defaultFilename);
-    
+
     if (filename) {
       // Ensure .svg extension
       const finalFilename = filename.endsWith('.svg') ? filename : `${filename}.svg`;
@@ -94,7 +94,7 @@ const Header = () => {
           className="header-bar-button"
           onClick={() => {
             removeStrokes(strokes)
-            sendUpdateBoardMessage(strokes)
+            sendRemoveBoardMessage(strokes)
           }}
         >
           🗑️
