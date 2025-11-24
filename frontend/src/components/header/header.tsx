@@ -4,6 +4,7 @@ import { useEditorStore } from "../../stores/editor-store";
 import { useTranslationStore } from "../../stores/translation-store";
 import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
+import { exportWhiteboardToSVG } from "../../utils/svg-export";
 import { useWebSocket } from "../../hooks/web-sockets";
 
 const getFocusedButtonClass = (bool: boolean) => {
@@ -11,18 +12,29 @@ const getFocusedButtonClass = (bool: boolean) => {
 }
 
 const Header = () => {
+  const viewport = useViewportStore();
   const { strokes, removeStrokes } = useBoardStore();
   const { brushTool, setBrushTool } = useEditorStore();
   const targetLanguage = useTranslationStore((state) => state.targetLanguage);
-  const viewport = useViewportStore();
   const { handleUndo, handleRedo } = useUndoRedo();
-  const { sendUpdateBoardMessage } = useWebSocket();
+  const { sendRemoveBoardMessage } = useWebSocket();
   const setTargetLanguage = useTranslationStore(
     (state) => state.setTargetLanguage
   );
 
   const handleResetView = () => {
     viewport.resetViewport();
+  };
+
+  const handleExportSVG = () => {
+    const defaultFilename = `polyboard-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.svg`;
+    const filename = prompt("Enter filename for SVG export:", defaultFilename);
+
+    if (filename) {
+      // Ensure .svg extension
+      const finalFilename = filename.endsWith('.svg') ? filename : `${filename}.svg`;
+      exportWhiteboardToSVG(strokes, finalFilename);
+    }
   };
 
   return (
@@ -82,7 +94,7 @@ const Header = () => {
           className="header-bar-button"
           onClick={() => {
             removeStrokes(strokes)
-            sendUpdateBoardMessage(strokes)
+            sendRemoveBoardMessage(strokes)
           }}
         >
           🗑️
@@ -104,9 +116,13 @@ const Header = () => {
           onClick={handleResetView}
           title="Reset View (Center & Zoom 100%)"
         >
-          Reset View
+          🎯 Reset View
         </button>
-        <button className="header-button header-button-export">
+        <button 
+          className="header-button header-button-export"
+          onClick={handleExportSVG}
+          title="Export whiteboard as SVG"
+        >
           Export PDF
         </button>
       </div>
