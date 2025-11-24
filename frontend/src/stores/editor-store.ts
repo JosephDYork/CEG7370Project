@@ -1,102 +1,132 @@
 import { create } from "zustand";
-import type { StrokeType } from "../models/strokes";
+import type { Stroke } from "../models/strokes";
 
 interface EditorState {
   brushTool: string;
   brushSize: number;
   brushColor: string;
-  currentStroke: StrokeType | null;
-  eraseStack: StrokeType[];
-  focusedStrokes: StrokeType[];
-  undoStack: StrokeType[];
+  currentStroke: Stroke | null;
+  eraseStack: Set<Stroke>;
+  focusedStrokes: Set<Stroke>;
+  undoStack: Stroke[];
+  isSocketConnected: boolean;
+  webSocket: WebSocket | null;
 }
 
 interface EditorActions {
   setBrushTool: (brushTool: string) => void;
   setBrushSize: (brushSize: number) => void;
   setBrushColor: (brushColor: string) => void;
-  setCurrentStroke: (stroke: StrokeType | null) => void;
-  addFocusedStroke: (stroke: StrokeType) => void;
+  setCurrentStroke: (stroke: Stroke | null) => void;
+  addFocusedStroke: (stroke: Stroke) => void;
   clearFocusedStrokes: () => void;
-  addToEraseStack: (stroke: StrokeType) => void;
+  addToEraseStack: (stroke: Stroke) => void;
   clearEraseStack: () => void;
-  addToUndoStack: (stroke: StrokeType) => void;
+  addToUndoStack: (stroke: Stroke) => void;
   clearUndoStack: () => void;
   removeFromUndoStack: () => void;
+  setWebSocket: (socket: WebSocket | null) => void;
+  getWebSocket: () => WebSocket | null;
+  setIsSocketConnected: (isConnected: boolean) => void;
+  getIsSocketConnected: () => boolean;
 }
 
-export const useEditorStore = create<EditorState & EditorActions>((set) => ({
-  brushTool: "pen",
-  brushSize: 2,
-  brushColor: "#000000",
-  currentStroke: null,
-  eraseStack: [],
-  focusedStrokes: [],
-  undoStack: [],
+export const useEditorStore = create<EditorState & EditorActions>(
+  (set, get) => ({
+    brushTool: "pen",
+    brushSize: 2,
+    brushColor: "#000000",
+    currentStroke: null,
+    eraseStack: new Set(),
+    focusedStrokes: new Set(),
+    undoStack: [],
+    isSocketConnected: false,
+    webSocket: null,
 
-  setBrushTool: (brushTool) =>
-    set((state) => ({
-      ...state,
-      brushTool,
-    })),
+    setBrushTool: (brushTool) =>
+      set((state) => ({
+        ...state,
+        brushTool,
+      })),
 
-  setBrushSize: (brushSize) =>
-    set((state) => ({
-      ...state,
-      brushSize,
-    })),
+    setBrushSize: (brushSize) =>
+      set((state) => ({
+        ...state,
+        brushSize,
+      })),
 
-  setBrushColor: (brushColor) =>
-    set((state) => ({
-      ...state,
-      brushColor,
-    })),
+    setBrushColor: (brushColor) =>
+      set((state) => ({
+        ...state,
+        brushColor,
+      })),
 
-  setCurrentStroke: (stroke) =>
-    set((state) => ({
-      ...state,
-      currentStroke: stroke,
-    })),
+    setCurrentStroke: (stroke) =>
+      set((state) => ({
+        ...state,
+        currentStroke: stroke,
+      })),
 
-  addFocusedStroke: (stroke) =>
-    set((state) => ({
-      ...state,
-      focusedStrokes: [...state.focusedStrokes, stroke],
-    })),
+    addFocusedStroke: (stroke) =>
+      set((state) => ({
+        ...state,
+        focusedStrokes: new Set([...state.focusedStrokes, stroke]),
+      })),
 
-  clearFocusedStrokes: () =>
-    set((state) => ({
-      ...state,
-      focusedStrokes: [],
-    })),
+    clearFocusedStrokes: () =>
+      set((state) => ({
+        ...state,
+        focusedStrokes: new Set(),
+      })),
 
-  addToEraseStack: (stroke) =>
-    set((state) => ({
-      ...state,
-      eraseStack: [...(state as any).eraseStack, stroke],
-    })),
+    addToEraseStack: (stroke) =>
+      set((state) => ({
+        ...state,
+        eraseStack: new Set([...state.eraseStack, stroke]),
+      })),
 
-  clearEraseStack: () =>
-    set((state) => ({
-      ...state,
-      eraseStack: [],
-    })),
+    clearEraseStack: () =>
+      set((state) => ({
+        ...state,
+        eraseStack: new Set(),
+      })),
 
-  addToUndoStack: (stroke) =>
-    set((state) => ({
-      ...state,
-      undoStack: [...state.undoStack, stroke],
-    })),
+    addToUndoStack: (stroke) =>
+      set((state) => ({
+        ...state,
+        undoStack: [...state.undoStack, stroke],
+      })),
 
-  clearUndoStack: () =>
-    set((state) => ({
-      ...state,
-      undoStack: [],
-    })),
+    clearUndoStack: () =>
+      set((state) => ({
+        ...state,
+        undoStack: [],
+      })),
 
-  removeFromUndoStack: () =>
-    set((state) => ({
-      ...state,
-      undoStack: state.undoStack.slice(0, -1),
-    })),
-}));
+    removeFromUndoStack: () =>
+      set((state) => ({
+        ...state,
+        undoStack: state.undoStack.slice(0, -1),
+      })),
+
+    setWebSocket: (socket) =>
+      set((state) => ({
+        ...state,
+        webSocket: socket,
+      })),
+
+    getWebSocket: () => {
+      return get().webSocket;
+    },
+
+    setIsSocketConnected: (isConnected) =>
+      set((state) => ({
+        ...state,
+        isSocketConnected: isConnected,
+      })),
+
+    getIsSocketConnected: () => {
+      return get().isSocketConnected;
+    },
+  })
+);

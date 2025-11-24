@@ -4,8 +4,8 @@ import { useEditorStore } from "../stores/editor-store";
 import { useWebSocket } from "./web-sockets";
 
 export const useKeyboardEvents = () => {
-  const { strokes, updateAllStrokes, addStroke } = useBoardStore();
-  const { sendBoardUpdate } = useWebSocket();
+  const { addStrokes, removeStrokes } = useBoardStore();
+  const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket()
   const {
     currentStroke,
     focusedStrokes,
@@ -31,23 +31,14 @@ export const useKeyboardEvents = () => {
     setCurrentStroke(updatedStroke);
   };
 
-  const deleteFocusedStrokes = () => {
-    const remainingStrokes = strokes.filter(
-      (stroke) => !focusedStrokes.some((focused) => focused.id === stroke.id)
-    );
-    updateAllStrokes(remainingStrokes);
-    sendBoardUpdate();
-    setCurrentStroke(null);
-  };
-
   const handleTextInput = (key: string) => {
     const textStroke = currentStroke as ITextStroke;
 
     switch (key) {
       case "Enter":
         if (currentStroke) {
-          addStroke(currentStroke);
-          sendBoardUpdate();
+          addStrokes([currentStroke]);
+          sendAddBoardMessage([currentStroke])
           setCurrentStroke(null);
         }
         break;
@@ -68,7 +59,9 @@ export const useKeyboardEvents = () => {
   const handleNonTextInput = (key: string) => {
     switch (key) {
       case "Delete":
-        deleteFocusedStrokes();
+        removeStrokes([...focusedStrokes]);
+        sendRemoveBoardMessage([...focusedStrokes])
+        setCurrentStroke(null);
         break;
       case "Escape":
         clearFocusedStrokes();

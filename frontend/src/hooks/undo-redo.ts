@@ -1,8 +1,10 @@
 import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
+import { useWebSocket } from "./web-sockets";
 
 export const useUndoRedo = () => {
-  const { strokes, removeLastStroke, addStroke } = useBoardStore();
+  const { strokes, removeStrokes, addStrokes } = useBoardStore();
+  const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket();
   const {
     focusedStrokes,
     undoStack,
@@ -14,14 +16,15 @@ export const useUndoRedo = () => {
   const handleUndo = () => {
     if (strokes.length === 0) return;
 
-    const lastStroke = removeLastStroke();
-    if (lastStroke) {
-      if (focusedStrokes.some((s) => s.id === lastStroke.id)) {
-        clearFocusedStrokes();
-      }
+    const lastStroke = strokes[strokes.length - 1];
+    removeStrokes([lastStroke]);
+    sendRemoveBoardMessage([lastStroke])
 
-      addToUndoStack(lastStroke);
+    if ([...focusedStrokes].some((s) => s.id === lastStroke.id)) {
+      clearFocusedStrokes();
     }
+
+    addToUndoStack(lastStroke);
   };
 
   const handleRedo = () => {
@@ -30,7 +33,8 @@ export const useUndoRedo = () => {
     const redoStroke = undoStack[undoStack.length - 1];
     if (redoStroke) {
       removeFromUndoStack();
-      addStroke(redoStroke);
+      addStrokes([redoStroke]);
+      sendAddBoardMessage([redoStroke])
     }
   };
 

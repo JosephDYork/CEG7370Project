@@ -1,64 +1,44 @@
 import { create } from "zustand";
-import type { StrokeType } from "../models/strokes";
+import type { Stroke } from "../models/strokes";
 
 interface boardState {
   version: number;
-  strokes: StrokeType[];
+  strokes: Stroke[];
 }
 
 interface boardActions {
-  updateAllStrokes: (strokes: Array<StrokeType>) => void;
-  addStroke: (stroke: StrokeType) => void;
-  removeStroke: (stroke: StrokeType) => void;
-  removeLastStroke: () => StrokeType | null;
-  clearStrokes: () => void;
-  forceUpdate: () => void;
+  addStrokes: (strokes: Stroke[], fromServer?: boolean) => void;
+  removeStrokes: (strokes: Stroke[], fromServer?: boolean) => void;
+  updateStrokes: (updatedStrokes: Stroke[], fromServer?: boolean) => void;
 }
 
-export const useBoardStore = create<boardState & boardActions>((set, get) => ({
+export const useBoardStore = create<boardState & boardActions>((set) => ({
   version: 1.0,
   strokes: [],
 
-  updateAllStrokes: (strokes: Array<StrokeType>) =>
+  addStrokes: (strokes) => {
     set((state) => ({
       ...state,
-      strokes: [...strokes],
-    })),
-
-  addStroke: (stroke) =>
-    set((state) => ({
-      ...state,
-      strokes: [...state.strokes, stroke],
-    })),
-
-  removeStroke: (stroke) =>
-    set((state) => ({
-      ...state,
-      strokes: state.strokes.filter((s) => s.id !== stroke.id),
-    })),
-
-  removeLastStroke: () => {
-    const state = get();
-    if (state.strokes.length === 0) return null;
-
-    const lastStroke = state.strokes[state.strokes.length - 1];
-    set((state) => ({
-      ...state,
-      strokes: state.strokes.slice(0, -1),
+      strokes: [...state.strokes, ...strokes],
     }));
-
-    return lastStroke;
   },
 
-  clearStrokes: () =>
+  removeStrokes: (strokes) => {
     set((state) => ({
       ...state,
-      strokes: [],
-    })),
+      strokes: state.strokes.filter(
+        (s) => !strokes.some((stroke) => stroke.id === s.id)
+      ),
+    }));
+  },
 
-  forceUpdate: () =>
+  updateStrokes: (updatedStrokes) => {
     set((state) => ({
       ...state,
-      strokes: [...state.strokes],
-    })),
+      strokes: state.strokes.map((s) => {
+        const updatedStroke = updatedStrokes.find((us) => us.id === s.id);
+        return updatedStroke ? updatedStroke : s;
+      }),
+    }));
+  },
 }));

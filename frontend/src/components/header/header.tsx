@@ -4,18 +4,19 @@ import { useEditorStore } from "../../stores/editor-store";
 import { useTranslationStore } from "../../stores/translation-store";
 import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
+import { useWebSocket } from "../../hooks/web-sockets";
 
 const getFocusedButtonClass = (bool: boolean) => {
-  return bool ? "header-bar-button" : "header-bar-button selected";
+  return bool ? "header-bar-button selected" : "header-bar-button";
 }
 
 const Header = () => {
+  const { strokes, removeStrokes } = useBoardStore();
+  const { brushTool, setBrushTool } = useEditorStore();
   const targetLanguage = useTranslationStore((state) => state.targetLanguage);
-  const currentTool = useEditorStore((state) => state.brushTool);
-  const setBrushTool = useEditorStore((state) => state.setBrushTool);
-  const clearStrokes = useBoardStore((state) => state.clearStrokes);
   const viewport = useViewportStore();
   const { handleUndo, handleRedo } = useUndoRedo();
+  const { sendUpdateBoardMessage } = useWebSocket();
   const setTargetLanguage = useTranslationStore(
     (state) => state.setTargetLanguage
   );
@@ -30,35 +31,35 @@ const Header = () => {
         <img src="/polyboard.svg" alt="Polyboard" className="header-logo" />
       </div>
       <div className="header-bar-wrapper">
-        <button title="Pan View" className={getFocusedButtonClass(currentTool !== "pan")}
+        <button title="Pan View" className={getFocusedButtonClass(brushTool == "pan")}
         onClick={() => setBrushTool("pan")}>
           🖐
         </button>
-        <button title="Select Tool" className={getFocusedButtonClass(currentTool !== "select")}
+        <button title="Select Tool" className={getFocusedButtonClass(brushTool == "select")}
         onClick={() => setBrushTool("select")}>
           👆
         </button>
-        <button title="Erase Tool" className={getFocusedButtonClass(currentTool !== "erase")}
+        <button title="Erase Tool" className={getFocusedButtonClass(brushTool == "erase")}
         onClick={() => setBrushTool("erase")}>
           🧼
         </button>
-        <button title="Draw Tool" className={getFocusedButtonClass(currentTool !== "pen")}
+        <button title="Draw Tool" className={getFocusedButtonClass(brushTool == "pen")}
         onClick={() => setBrushTool("pen")}>
           ✏
         </button>
-        <button title="Text Tool" className={getFocusedButtonClass(currentTool !== "text")}
+        <button title="Text Tool" className={getFocusedButtonClass(brushTool == "text")}
         onClick={() => setBrushTool("text")}>
           📝
         </button>
-        <button title="Line Tool" className={getFocusedButtonClass(currentTool !== "line")}
+        <button title="Line Tool" className={getFocusedButtonClass(brushTool == "line")}
         onClick={() => setBrushTool("line")}>
           📏
         </button>
-        <button title="Rectangle Tool" className={getFocusedButtonClass(currentTool !== "square")}
+        <button title="Rectangle Tool" className={getFocusedButtonClass(brushTool == "square")}
         onClick={() => setBrushTool("square")}>
           ⬜
         </button>
-        <button title="Ellipse Tool" className={getFocusedButtonClass(currentTool !== "ellipse")}
+        <button title="Ellipse Tool" className={getFocusedButtonClass(brushTool == "ellipse")}
         onClick={() => setBrushTool("ellipse")}>
           ⬭
         </button>
@@ -79,7 +80,10 @@ const Header = () => {
         <button
           title="Clear Tool"
           className="header-bar-button"
-          onClick={clearStrokes}
+          onClick={() => {
+            removeStrokes(strokes)
+            sendUpdateBoardMessage(strokes)
+          }}
         >
           🗑️
         </button>

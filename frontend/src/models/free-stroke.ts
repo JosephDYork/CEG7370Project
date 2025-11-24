@@ -1,13 +1,12 @@
 import type { Stroke, Point, BoundingBox } from "./strokes";
 
 export interface IFreeStroke extends Stroke {
-  type: "free";
   size: number;
   points: Point[];
 }
 
 export class FreeStroke implements IFreeStroke {
-  type = "free" as const;
+  type = "free";
   id: string;
   color: string;
   size: number;

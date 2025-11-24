@@ -3,7 +3,7 @@ import { FreeStroke } from "../models/free-stroke";
 import { TextStroke } from "../models/text-stroke";
 import { LineStroke } from "../models/line-stroke";
 import { ShapeStroke } from "../models/shape-stroke";
-import type { StrokeType } from "../models/strokes";
+import type { Stroke } from "../models/strokes";
 import { useEditorStore } from "../stores/editor-store";
 import { useBoardStore } from "../stores/board-store";
 import { useWebSocket } from "./web-sockets";
@@ -15,8 +15,8 @@ export const useSelectionTool = () => {
     null
   );
 
-  const { sendBoardUpdate } = useWebSocket();
-  const { strokes, forceUpdate } = useBoardStore();
+  const { strokes, updateStrokes } = useBoardStore();
+  const { sendUpdateBoardMessage } = useWebSocket();
   const { addFocusedStroke, clearFocusedStrokes, setCurrentStroke } =
     useEditorStore();
 
@@ -68,7 +68,7 @@ export const useSelectionTool = () => {
 
   const translateStrokes = (
     currentCoords: [number, number],
-    strokes: StrokeType[]
+    strokes: Stroke[]
   ) => {
     if (!originCoords) return;
 
@@ -108,14 +108,15 @@ export const useSelectionTool = () => {
       }
     });
 
-    forceUpdate();
+    updateStrokes(strokes);
     setOriginCoords(currentCoords);
   };
 
-  const endTranslation = () => {
+  const endTranslation = (strokes: Stroke[]) => {
+    updateStrokes(strokes);
+    sendUpdateBoardMessage(strokes);
     setIsTranslating(false);
     setOriginCoords(null);
-    sendBoardUpdate();
   };
 
   return {
