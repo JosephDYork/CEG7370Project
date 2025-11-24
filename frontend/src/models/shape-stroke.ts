@@ -3,19 +3,18 @@ import type { Stroke, Point, BoundingBox } from "./strokes";
 export type ShapeType = "square" | "ellipse";
 
 export interface IShapeStroke extends Stroke {
-  type: "shape";
   shapeType: ShapeType;
-  lineSize: number;
+  size: number;
   origin: Point;
   termination: Point;
 }
 
 export class ShapeStroke implements IShapeStroke {
-  type = "shape" as const;
+  type = "shape";
   id: string;
   shapeType: ShapeType;
   color: string;
-  lineSize: number;
+  size: number;
   origin: Point;
   termination: Point;
 
@@ -30,7 +29,7 @@ export class ShapeStroke implements IShapeStroke {
     this.id = strokeId;
     this.shapeType = shapeType;
     this.color = strokeColor;
-    this.lineSize = lineSize;
+    this.size = lineSize;
     this.origin = origin;
     this.termination = termination;
   }
@@ -40,7 +39,7 @@ export class ShapeStroke implements IShapeStroke {
       this.id,
       this.shapeType,
       updates.color ?? this.color,
-      updates.size ?? this.lineSize,
+      updates.size ?? this.size,
       this.origin,
       this.termination
     );
@@ -51,7 +50,7 @@ export class ShapeStroke implements IShapeStroke {
       this.id,
       this.shapeType,
       this.color,
-      this.lineSize,
+      this.size,
       this.origin,
       [x, y]
     );
@@ -68,7 +67,7 @@ export class ShapeStroke implements IShapeStroke {
     const maxX = Math.max(this.origin[0], this.termination[0]);
     const minY = Math.min(this.origin[1], this.termination[1]);
     const maxY = Math.max(this.origin[1], this.termination[1]);
-    const padding = this.lineSize / 2;
+    const padding = this.size / 2;
     return [minX - padding, minY - padding, maxX + padding, maxY + padding];
   }
 

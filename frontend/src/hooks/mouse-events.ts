@@ -7,10 +7,10 @@ import { FreeStroke } from "../models/free-stroke";
 import { TextStroke } from "../models/text-stroke";
 import { LineStroke } from "../models/line-stroke";
 import { ShapeStroke } from "../models/shape-stroke";
-import type { Point, StrokeType } from "../models/strokes";
-import { useWebSocket } from "./web-sockets";
+import type { Point, Stroke } from "../models/strokes";
 import { useSelectionTool } from "./selection";
 import { usePanTool } from "./pan-tool";
+import { useWebSocket } from "./web-sockets";
 
 export const useMouseEvents = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>
@@ -18,8 +18,8 @@ export const useMouseEvents = (
   const selection = useSelectionTool();
   const panTool = usePanTool();
   const viewport = useViewportStore();
-  const { strokes, addStroke, removeStroke } = useBoardStore();
-  const { sendBoardUpdate } = useWebSocket();
+  const { strokes, addStrokes, removeStrokes } = useBoardStore();
+  const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket()
   const [hoveringTranslatable, setHoveringTranslatable] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
   const {
@@ -29,6 +29,7 @@ export const useMouseEvents = (
     currentStroke,
     focusedStrokes,
     eraseStack,
+    addToEraseStack,
     setCurrentStroke,
     clearFocusedStrokes,
     clearEraseStack,
@@ -47,9 +48,10 @@ export const useMouseEvents = (
     return viewport.screenToWorld([screenX, screenY]);
   };
 
-  const finishStroke = (stroke: StrokeType) => {
-    addStroke(stroke);
-    sendBoardUpdate();
+  const finishStroke = (stroke: Stroke) => {
+    addStrokes([stroke]);
+    sendAddBoardMessage([stroke])
+
     if (stroke.type !== "text") {
       setCurrentStroke(null);
     }
@@ -122,11 +124,11 @@ export const useMouseEvents = (
     }
 
     // Handle selection (uses world coords)
-    if (brushTool === "select" && focusedStrokes.length > 0) {
+    if (brushTool === "select" && focusedStrokes.size > 0) {
       const ctx = canvasRef.current?.getContext("2d");
       if (
         ctx &&
-        focusedStrokes.some((stroke) => stroke.isPointNear(worldCoords, 10, ctx))
+        [...focusedStrokes].some((stroke) => stroke.isPointNear(worldCoords, 10, ctx))
       ) {
         selection.startTranslation(worldCoords);
         return;
@@ -137,11 +139,14 @@ export const useMouseEvents = (
 
     if (brushTool === "erase") {
       setIsErasing(true);
-      console.log("Starting erase at", worldCoords);
 
       for (const stroke of strokes) {
         if (stroke.isPointNear(worldCoords, brushSize)) {
-          useEditorStore.getState().addToEraseStack(stroke);
+          addToEraseStack(stroke);
+
+          if ([...focusedStrokes].find((s) => s.id === stroke.id)) {
+            clearFocusedStrokes();
+          }
         }
       }
 
@@ -187,11 +192,11 @@ export const useMouseEvents = (
     // Handle selection hover (uses world coords)
     if (
       brushTool === "select" &&
-      focusedStrokes.length > 0 &&
+      focusedStrokes.size > 0 &&
       !selection.isTranslating &&
       !isDown
     ) {
-      const strokeHovered = focusedStrokes.some((stroke) =>
+      const strokeHovered = [...focusedStrokes].some((stroke) =>
         stroke.isPointNear(worldCoords, 10, ctx)
       );
       if (strokeHovered !== hoveringTranslatable) {
@@ -206,7 +211,11 @@ export const useMouseEvents = (
     if (brushTool === "erase" && isErasing && isDown) {
       for (const stroke of strokes) {
         if (stroke.isPointNear(worldCoords, brushSize)) {
-          useEditorStore.getState().addToEraseStack(stroke);
+          addToEraseStack(stroke);
+
+          if ([...focusedStrokes].find((s) => s.id === stroke.id)) {
+            clearFocusedStrokes();
+          }
         }
       }
  
@@ -224,8 +233,8 @@ export const useMouseEvents = (
     }
 
     // Handle selection translation (uses world coords)
-    if (selection.isTranslating && isDown && focusedStrokes.length > 0) {
-      selection.translateStrokes(worldCoords, focusedStrokes);
+    if (selection.isTranslating && isDown && focusedStrokes.size > 0) {
+      selection.translateStrokes(worldCoords, [...focusedStrokes]);
       return;
     }
 
@@ -248,14 +257,15 @@ export const useMouseEvents = (
     // add an erase circle to the stroke stack.
     if (isErasing && brushTool === "erase") {
       setIsErasing(false);
-      for (const stroke of eraseStack) {
-        removeStroke(stroke);
-      }
 
-      // Ensure we don't leave an erase circle artifact.
+      // It's a lot easier to just cast eraseStack (which is a Set, bad name I know) to a list.
+      const eraseList = [...eraseStack];
+
+      // Now bulk remove
+      eraseList.forEach((stroke) =>  removeStrokes([stroke]));
+      sendRemoveBoardMessage(eraseList)
       setCurrentStroke(null);
       clearEraseStack();
-      sendBoardUpdate();
       return;
     }
 
@@ -268,10 +278,7 @@ export const useMouseEvents = (
     }
 
     if (selection.isTranslating) {
-      selection.endTranslation();
-      if (canvasRef.current) {
-        canvasRef.current.style.cursor = "default";
-      }
+      selection.endTranslation([...focusedStrokes]);
     }
   };
 
@@ -305,7 +312,7 @@ export const useMouseEvents = (
     }
 
     if (selection.isTranslating) {
-      selection.endTranslation();
+      selection.endTranslation([...focusedStrokes]);
     }
   };
 

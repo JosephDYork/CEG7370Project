@@ -1,8 +1,10 @@
+from typing import List, Union
+
 from pydantic import BaseModel
-from typing import List, Union, Tuple
 
 
 class FreeStroke(BaseModel):
+    type: str
     id: str
     color: str
     size: float
@@ -10,30 +12,62 @@ class FreeStroke(BaseModel):
 
 
 class TextStroke(BaseModel):
+    type: str
     id: str
     color: str
-    fontSize: float
-    position: Tuple[float, float]
+    size: float
+    position: List[float]
     text: str
 
 
 class LineStroke(BaseModel):
+    type: str
     id: str
     color: str
     size: float
-    startPoint: Tuple[float, float]
-    endPoint: Tuple[float, float]
+    startPoint: List[float]
+    endPoint: List[float]
 
 
 class ShapeStroke(BaseModel):
-    id: str
     type: str
+    id: str
+    shapeType: str
     color: str
     lineSize: float
-    origin: Tuple[float, float]
-    termination: Tuple[float, float]
+    origin: List[float]
+    termination: List[float]
 
 
 class BoardState(BaseModel):
     version: float = 1.0
     strokes: List[Union[FreeStroke, TextStroke, LineStroke, ShapeStroke]] = []
+
+    def addStroke(self, stroke: Union[FreeStroke, TextStroke, LineStroke, ShapeStroke]):
+        addedStrokes = []
+        print("adding " + stroke.id)
+        if stroke.id not in [s.id for s in self.strokes]:
+            self.strokes.append(stroke)
+            addedStrokes.append(stroke)
+
+        return addedStrokes
+
+    def removeStroke(self, stroke: Union[FreeStroke, TextStroke, LineStroke, ShapeStroke]):
+        removedStrokes = []
+        print("removing " + stroke.id)
+        if stroke.id in [s.id for s in self.strokes]:
+            self.strokes.remove(stroke)
+            removedStrokes.append(stroke)
+
+        return removedStrokes
+
+    def updateStroke(self, stroke: Union[FreeStroke, TextStroke, LineStroke, ShapeStroke]):
+        updatedStrokes = []
+        print("updating " + stroke.id)
+        for srcStroke in self.strokes:
+            if srcStroke.id == stroke.id:
+                self.strokes.remove(srcStroke)
+                self.strokes.append(stroke)
+                updatedStrokes.append(stroke)
+
+        return updatedStrokes

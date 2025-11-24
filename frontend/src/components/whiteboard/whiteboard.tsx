@@ -2,12 +2,11 @@ import { useRef, useEffect, useState } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useViewportStore } from "../../stores/viewport-store";
-import { useUndoRedo } from "../../hooks/undo-redo";
 import { FreeStroke } from "../../models/free-stroke";
 import { TextStroke } from "../../models/text-stroke";
 import { LineStroke } from "../../models/line-stroke";
 import { ShapeStroke } from "../../models/shape-stroke";
-import type { StrokeType } from "../../models/strokes";
+import type { Stroke } from "../../models/strokes";
 import { useMouseEvents } from "../../hooks/mouse-events";
 import {
   renderFreeStroke,
@@ -28,7 +27,6 @@ const Whiteboard = () => {
   const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
   const viewportState = useViewportStore((state) => state);
-  // const { handleUndo, handleRedo } = useUndoRedo();
   const { handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave } =
     useMouseEvents(canvasRef);
 
@@ -59,7 +57,7 @@ const Whiteboard = () => {
   // Most important function. This mulls through all the strokes and draws them to the
   // canvas in order. Make sure not to mess up this data structure or you'll break everything.
   const drawCanvas = () => {
-    const allStrokes: StrokeType[] = [];
+    const allStrokes: Stroke[] = [];
 
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Whiteboard canvas does not exist");
@@ -102,38 +100,37 @@ const Whiteboard = () => {
           renderTextStroke(
             ctx,
             stroke as TextStroke,
-            editorState.focusedStrokes,
-            editorState.eraseStack
+            [...editorState.focusedStrokes],
+            [...editorState.eraseStack]
           );
           break;
         case "free":
           renderFreeStroke(
             ctx,
             stroke as FreeStroke,
-            editorState.focusedStrokes,
-            editorState.eraseStack
+            [...editorState.focusedStrokes],
+            [...editorState.eraseStack]
           );
           break;
         case "line":
           renderLineStroke(
             ctx,
             stroke as LineStroke,
-            editorState.focusedStrokes,
-            editorState.eraseStack
+            [...editorState.focusedStrokes],
+            [...editorState.eraseStack]
           );
           break;
         case "shape":
           renderShapeStroke(
             ctx,
             stroke as ShapeStroke,
-            editorState.focusedStrokes,
-            editorState.eraseStack
+            [...editorState.focusedStrokes],
+            [...editorState.eraseStack]
           );
           break;
       }
     }
 
-    // Restore context
     ctx.restore();
   };
 
@@ -169,7 +166,7 @@ const Whiteboard = () => {
   // Infinite grid that moves with the viewport
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     const bounds = viewportState.getVisibleBounds();
-    
+
     ctx.strokeStyle = GRID_COLOR;
     ctx.lineWidth = 0.5 / viewportState.zoom; // Keep grid lines thin at any zoom
     ctx.beginPath();
