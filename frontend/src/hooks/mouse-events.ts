@@ -48,11 +48,19 @@ export const useMouseEvents = (
     return viewport.screenToWorld([screenX, screenY]);
   };
 
-  const finishStroke = (stroke: Stroke) => {
-    addStrokes([stroke]);
-    sendAddBoardMessage([stroke])
 
-    if (stroke.type !== "text") {
+  const finishStroke = (stroke: Stroke) => {
+    let finalStroke: Stroke = stroke;
+    // If it's a FreeStroke, run RDP simplification
+    if (stroke instanceof FreeStroke) {
+      finalStroke = stroke.simplify(); // Optional: pass epsilon here
+    }
+
+    
+    addStrokes([finalStroke]);
+    sendAddBoardMessage([finalStroke]);
+
+    if (finalStroke.type !== "text") {
       setCurrentStroke(null);
     }
   };
