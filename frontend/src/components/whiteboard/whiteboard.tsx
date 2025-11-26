@@ -94,6 +94,38 @@ const Whiteboard = () => {
       renderSelectionBox(ctx, currentStroke as ShapeStroke);
     }
 
+    // Render Magic Box with special styling
+    if (
+      currentStroke &&
+      currentStroke.type === "shape" &&
+      currentStroke.id === "magicbox"
+    ) {
+      const magicBox = currentStroke as ShapeStroke;
+      ctx.save();
+      
+      // Draw dashed red border
+      ctx.strokeStyle = "#FF6B6B";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(
+        magicBox.origin[0],
+        magicBox.origin[1],
+        magicBox.termination[0] - magicBox.origin[0],
+        magicBox.termination[1] - magicBox.origin[1]
+      );
+      
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(255, 107, 107, 0.1)";
+      ctx.fillRect(
+        magicBox.origin[0],
+        magicBox.origin[1],
+        magicBox.termination[0] - magicBox.origin[0],
+        magicBox.termination[1] - magicBox.origin[1]
+      );
+      
+      ctx.restore();
+    }
+
     for (const stroke of allStrokes) {
       switch (stroke.type) {
         case "text":

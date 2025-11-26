@@ -5,6 +5,7 @@ import Whiteboard from "./components/whiteboard/whiteboard";
 import ToolsPanel from "./components/toolspanel/toolspanel";
 import ChatPanel from "./components/chatpanel/chatpanel";
 import Footer from "./components/footer/footer";
+import { OCRProgress } from "./components/ocr-progress/ocr-progress";
 import "./app.css";
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
         <ChatPanel />
         <Footer />
       </div>
+      <OCRProgress />
     </div>
   );
 };

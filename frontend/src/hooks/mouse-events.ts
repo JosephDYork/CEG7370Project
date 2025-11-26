@@ -10,6 +10,7 @@ import { ShapeStroke } from "../models/shape-stroke";
 import type { Point, Stroke } from "../models/strokes";
 import { useSelectionTool } from "./selection";
 import { usePanTool } from "./pan-tool";
+import { useMagicBoxTool } from "./magic-box-tool";
 import { useWebSocket } from "./web-sockets";
 
 export const useMouseEvents = (
@@ -17,6 +18,7 @@ export const useMouseEvents = (
 ) => {
   const selection = useSelectionTool();
   const panTool = usePanTool();
+  const magicBoxTool = useMagicBoxTool();
   const viewport = useViewportStore();
   const { strokes, addStrokes, removeStrokes } = useBoardStore();
   const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket()
@@ -87,6 +89,8 @@ export const useMouseEvents = (
         );
       case "select":
         return selection.startSelectBox([x, y]);
+      case "magicbox":
+        return magicBoxTool.startMagicBox([x, y]);
       default:
         return null;
     }
@@ -110,6 +114,9 @@ export const useMouseEvents = (
         const shapeStroke = currentStroke as ShapeStroke;
         if (selection.selectBoxExists) {
           selection.updateSelectBox(shapeStroke, coords, ctx);
+        } else if (shapeStroke.id === "magicbox") {
+          const updatedMagicBox = magicBoxTool.updateMagicBox(shapeStroke, coords);
+          setCurrentStroke(updatedMagicBox);
         } else {
           const updatedShapeStroke = shapeStroke.updateTermination(coords[0], coords[1]);
           setCurrentStroke(updatedShapeStroke);
@@ -252,7 +259,7 @@ export const useMouseEvents = (
     updateCurrentStroke(worldCoords, ctx);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
     setCursorDown(false);
 
     // End pan
@@ -278,6 +285,13 @@ export const useMouseEvents = (
     }
 
     if (currentStroke && !(currentStroke instanceof TextStroke) && !selection.selectBoxExists) {
+      // Handle magic box tool - trigger OCR on mouse up
+      if (currentStroke.id === "magicbox") {
+        await magicBoxTool.endMagicBox(canvasRef, currentStroke as ShapeStroke);
+        setCurrentStroke(null);
+        return;
+      }
+      
       finishStroke(currentStroke);
     }
 
