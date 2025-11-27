@@ -204,6 +204,11 @@ export const useMouseEvents = (
       return;
     }
 
+    // Update cursor style for magic box tool
+    if (brushTool === "magicbox") {
+      canvasRef.current.style.cursor = "crosshair";
+    }
+
     // Handle selection hover (uses world coords)
     if (
       brushTool === "select" &&

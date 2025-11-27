@@ -16,16 +16,16 @@ export interface OCRProgressData {
 let worker: Worker | null = null;
 
 
-//Initialize the Tesseract worker
+// Initialize the Tesseract worker (cached for performance)
 export async function initializeOCRWorker(): Promise<Worker> {
   if (worker) {
     return worker;
   }
 
   worker = await createWorker('eng', 1, {
-    logger: (m) => {
-      // Logger can be used for progress updates
-      console.log('[OCR]', m);
+    logger: () => {
+      // Silent in production - can enable for debugging
+      // console.log('[OCR]', m);
     },
   });
 
@@ -47,6 +47,21 @@ export async function terminateOCRWorker(): Promise<void> {
  * @param onProgress - Optional callback for progress updates
  * @returns Array of recognized text with positions
  */
+/**
+ * Perform OCR with timeout protection
+ */
+async function performOCRWithTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number = 30000
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('OCR timeout - operation took too long')), timeoutMs)
+    ),
+  ]);
+}
+
 export async function performOCR(
   canvas: HTMLCanvasElement,
   boundingBox: BoundingBox,
@@ -77,13 +92,15 @@ export async function performOCR(
   const ocrWorker = await initializeOCRWorker();
 
   try {
-    // Perform OCR recognition
-    const { data } = await ocrWorker.recognize(tempCanvas, {}, {
-      text: true,
-      blocks: true,
-      hocr: false,
-      tsv: false,
-    });
+    // Perform OCR recognition with timeout
+    const { data } = await performOCRWithTimeout(
+      ocrWorker.recognize(tempCanvas, {}, {
+        text: true,
+        blocks: true,
+        hocr: false,
+        tsv: false,
+      })
+    );
 
     if (onProgress) {
       onProgress({ status: 'Processing results', progress: 0.9 });
@@ -116,7 +133,13 @@ export async function performOCR(
     return results;
   } catch (error) {
     console.error('OCR Error:', error);
-    throw new Error('OCR processing failed');
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        throw new Error('OCR took too long - try a smaller selection');
+      }
+      throw new Error(`OCR failed: ${error.message}`);
+    }
+    throw new Error('OCR processing failed - please try again');
   }
 }
 

@@ -41,7 +41,6 @@ const Whiteboard = () => {
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 
@@ -260,6 +259,25 @@ const Whiteboard = () => {
 
   return (
     <div className="whiteboard-container">
+      {editorState.brushTool === "magicbox" && (
+        <div style={{
+          position: "absolute",
+          top: "80px",
+          left: "45%",
+          transform: "translateX(-50%)",
+          background: "rgba(255, 107, 107, 0.9)",
+          color: "white",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+          pointerEvents: "none",
+          zIndex: 10,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
+        }}>
+          ✨ Drag to select region for OCR • Press M to toggle • Min confidence: 60%
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         id="whiteboard-canvas"
@@ -268,7 +286,7 @@ const Whiteboard = () => {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        onWheel={handleWheel}
+        onWheelCapture={handleWheel}
       />
     </div>
   );
