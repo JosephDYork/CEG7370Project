@@ -32,15 +32,12 @@ export class TextStroke implements ITextStroke {
     return [this.position[0], this.position[1] - this.size / 2];
   }
 
-  getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox {
-    if (!ctx || !this.text) {
-      throw new Error(
-        "Canvas context is required to measure text bounding box."
-      );
-    }
+  getBoundingBox(): BoundingBox {
+    const tempCanvas = document.createElement("canvas");
+    const ctx = tempCanvas.getContext("2d");
 
-    ctx.font = `${this.size}px Arial`;
-    const textWidth = ctx.measureText(this.text).width;
+    ctx!.font = `${this.size}px Arial`;
+    const textWidth = ctx!.measureText(this.text).width;
 
     return [
       this.position[0],
@@ -53,11 +50,9 @@ export class TextStroke implements ITextStroke {
   isPointNear(
     point: Point,
     tolerance: number = 10,
-    ctx?: CanvasRenderingContext2D
   ): boolean {
-    if (!ctx) return false;
     const [x, y] = point;
-    const [x1, y1, x2, y2] = this.getBoundingBox(ctx);
+    const [x1, y1, x2, y2] = this.getBoundingBox();
     return x >= x1 && x <= x2 && y >= y1 && y <= y2;
   }
 

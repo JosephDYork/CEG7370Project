@@ -73,6 +73,10 @@ export const useKeyboardEvents = () => {
           setBrushTool("pan");
         }
         break;
+      case "m": // 'M' key for Magic Box OCR tool
+      case "M":
+        setBrushTool("magicbox");
+        break;
     }
   };
 

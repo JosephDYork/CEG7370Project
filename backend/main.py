@@ -5,10 +5,11 @@ import httpx
 import uvicorn
 from board_store import BoardState
 from chat_store import ChatState
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from messages import PolyboardMessage
+from ocr_service import decode_b64img, OCRService, OCRRequest, OCRResponse, TextBlock
 
 app = FastAPI(debug=True)
 
@@ -28,6 +29,8 @@ app.add_middleware(
 board_state = BoardState()
 chat_state = ChatState()
 active_connections: Set[WebSocket] = set()
+ocr_service = OCRService()
+
 
 async def broadcast_to_all(message_type: str, payload: dict, exclude_websocket: WebSocket = None):
     disconnected = set()
@@ -152,6 +155,32 @@ async def translate_text(req: TranslateRequest):
             translated = f"{req.text} [translated to {req.target_language}]"
             return TranslateResponse(translated_text=translated)
 
+
+@app.post("/ocr", response_model=OCRResponse)
+async def process_ocr(req: OCRRequest):
+    try:
+        image = decode_b64img(req.image)
+
+        # Textract only works on stuff in S3 so we gotta upload the image first
+        fileName = await ocr_service.upload_image_to_s3(image) 
+        text_blocks = await ocr_service.extract_text(fileName, image)
+
+        response_blocks = [
+            TextBlock(
+                text=block["text"],
+                left=block["left"],
+                top=block["top"],
+                width=block["width"],
+                height=block["height"],
+                confidence=block["confidence"],
+            )
+            for block in text_blocks
+        ]
+
+        return OCRResponse(textBlocks=response_blocks)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OCR processing failed: {str(e)}")
 
 
 if __name__ == "__main__":

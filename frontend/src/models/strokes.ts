@@ -7,7 +7,7 @@ export interface Stroke {
   size: number;
   type: string;
   getCentroid(): Point;
-  getBoundingBox(ctx?: CanvasRenderingContext2D): BoundingBox;
+  getBoundingBox(): BoundingBox;
   isPointNear(
     point: Point,
     tolerance?: number,

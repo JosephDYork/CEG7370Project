@@ -51,6 +51,10 @@ const Header = () => {
         onClick={() => setBrushTool("select")}>
           👆
         </button>
+        <button title="Magic Box - OCR Tool" className={getFocusedButtonClass(brushTool == "magicbox")}
+        onClick={() => setBrushTool("magicbox")}>
+          ✨
+        </button>
         <button title="Erase Tool" className={getFocusedButtonClass(brushTool == "erase")}
         onClick={() => setBrushTool("erase")}>
           🧼

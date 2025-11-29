@@ -41,7 +41,6 @@ const Whiteboard = () => {
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 
@@ -92,6 +91,38 @@ const Whiteboard = () => {
       currentStroke.id === "selectbox"
     ) {
       renderSelectionBox(ctx, currentStroke as ShapeStroke);
+    }
+
+    // Render Magic Box with special styling
+    if (
+      currentStroke &&
+      currentStroke.type === "shape" &&
+      currentStroke.id === "magicbox"
+    ) {
+      const magicBox = currentStroke as ShapeStroke;
+      ctx.save();
+      
+      // Draw dashed red border
+      ctx.strokeStyle = "#FF6B6B";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(
+        magicBox.origin[0],
+        magicBox.origin[1],
+        magicBox.termination[0] - magicBox.origin[0],
+        magicBox.termination[1] - magicBox.origin[1]
+      );
+      
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(255, 107, 107, 0.1)";
+      ctx.fillRect(
+        magicBox.origin[0],
+        magicBox.origin[1],
+        magicBox.termination[0] - magicBox.origin[0],
+        magicBox.termination[1] - magicBox.origin[1]
+      );
+      
+      ctx.restore();
     }
 
     for (const stroke of allStrokes) {
@@ -228,6 +259,25 @@ const Whiteboard = () => {
 
   return (
     <div className="whiteboard-container">
+      {editorState.brushTool === "magicbox" && (
+        <div style={{
+          position: "absolute",
+          top: "80px",
+          left: "45%",
+          transform: "translateX(-50%)",
+          background: "rgba(255, 107, 107, 0.9)",
+          color: "white",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+          pointerEvents: "none",
+          zIndex: 10,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
+        }}>
+          ✨ Drag to select region for OCR • Press M to toggle • Min confidence: 60%
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         id="whiteboard-canvas"
@@ -236,7 +286,7 @@ const Whiteboard = () => {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        onWheel={handleWheel}
+        onWheelCapture={handleWheel}
       />
     </div>
   );

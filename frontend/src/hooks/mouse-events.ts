@@ -10,6 +10,7 @@ import { ShapeStroke } from "../models/shape-stroke";
 import type { Point, Stroke } from "../models/strokes";
 import { useSelectionTool } from "./selection";
 import { usePanTool } from "./pan-tool";
+import { useMagicBoxTool } from "./magic-box-tool";
 import { useWebSocket } from "./web-sockets";
 
 export const useMouseEvents = (
@@ -17,6 +18,7 @@ export const useMouseEvents = (
 ) => {
   const selection = useSelectionTool();
   const panTool = usePanTool();
+  const magicBoxTool = useMagicBoxTool();
   const viewport = useViewportStore();
   const { strokes, addStrokes, removeStrokes } = useBoardStore();
   const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket()
@@ -87,12 +89,14 @@ export const useMouseEvents = (
         );
       case "select":
         return selection.startSelectBox([x, y]);
+      case "magicbox":
+        return magicBoxTool.startMagicBox([x, y]);
       default:
         return null;
     }
   };
 
-  const updateCurrentStroke = (coords: Point, ctx: CanvasRenderingContext2D) => {
+  const updateCurrentStroke = (coords: Point) => {
     if (!currentStroke) return;
 
     switch (currentStroke.type) {
@@ -109,7 +113,10 @@ export const useMouseEvents = (
       case "shape":
         const shapeStroke = currentStroke as ShapeStroke;
         if (selection.selectBoxExists) {
-          selection.updateSelectBox(shapeStroke, coords, ctx);
+          selection.updateSelectBox(shapeStroke, coords);
+        } else if (shapeStroke.id === "magicbox") {
+          const updatedMagicBox = magicBoxTool.updateMagicBox(shapeStroke, coords);
+          setCurrentStroke(updatedMagicBox);
         } else {
           const updatedShapeStroke = shapeStroke.updateTermination(coords[0], coords[1]);
           setCurrentStroke(updatedShapeStroke);
@@ -197,6 +204,11 @@ export const useMouseEvents = (
       return;
     }
 
+    // Update cursor style for magic box tool
+    if (brushTool === "magicbox") {
+      canvasRef.current.style.cursor = "crosshair";
+    }
+
     // Handle selection hover (uses world coords)
     if (
       brushTool === "select" &&
@@ -249,10 +261,10 @@ export const useMouseEvents = (
     if (!isDown || !currentStroke) return;
 
     // Update current stroke (uses world coords)
-    updateCurrentStroke(worldCoords, ctx);
+    updateCurrentStroke(worldCoords);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
     setCursorDown(false);
 
     // End pan
@@ -278,6 +290,13 @@ export const useMouseEvents = (
     }
 
     if (currentStroke && !(currentStroke instanceof TextStroke) && !selection.selectBoxExists) {
+      // Handle magic box tool - trigger OCR on mouse up
+      if (currentStroke.id === "magicbox") {
+        await magicBoxTool.endMagicBox(currentStroke as ShapeStroke);
+        setCurrentStroke(null);
+        return;
+      }
+      
       finishStroke(currentStroke);
     }
 
