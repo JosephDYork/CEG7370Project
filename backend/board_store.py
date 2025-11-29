@@ -34,7 +34,7 @@ class ShapeStroke(BaseModel):
     id: str
     shapeType: str
     color: str
-    lineSize: float
+    size: float
     origin: List[float]
     termination: List[float]
 

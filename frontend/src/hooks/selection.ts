@@ -38,17 +38,13 @@ export const useSelectionTool = () => {
   const updateSelectBox = (
     selectBox: ShapeStroke,
     coords: [number, number],
-    ctx: CanvasRenderingContext2D
   ) => {
     const updatedSelectBox = selectBox.updateTermination(coords[0], coords[1]);
     setCurrentStroke(updatedSelectBox);
 
     clearFocusedStrokes();
     strokes.forEach((stroke) => {
-      const strokeBBox =
-        stroke.type === "text"
-          ? stroke.getBoundingBox(ctx)
-          : stroke.getBoundingBox();
+      const strokeBBox = stroke.getBoundingBox()
 
       if (updatedSelectBox.isRectangleInsideRectangle(strokeBBox)) {
         addFocusedStroke(stroke);

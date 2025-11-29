@@ -96,7 +96,7 @@ export const useMouseEvents = (
     }
   };
 
-  const updateCurrentStroke = (coords: Point, ctx: CanvasRenderingContext2D) => {
+  const updateCurrentStroke = (coords: Point) => {
     if (!currentStroke) return;
 
     switch (currentStroke.type) {
@@ -113,7 +113,7 @@ export const useMouseEvents = (
       case "shape":
         const shapeStroke = currentStroke as ShapeStroke;
         if (selection.selectBoxExists) {
-          selection.updateSelectBox(shapeStroke, coords, ctx);
+          selection.updateSelectBox(shapeStroke, coords);
         } else if (shapeStroke.id === "magicbox") {
           const updatedMagicBox = magicBoxTool.updateMagicBox(shapeStroke, coords);
           setCurrentStroke(updatedMagicBox);
@@ -261,7 +261,7 @@ export const useMouseEvents = (
     if (!isDown || !currentStroke) return;
 
     // Update current stroke (uses world coords)
-    updateCurrentStroke(worldCoords, ctx);
+    updateCurrentStroke(worldCoords);
   };
 
   const handleMouseUp = async () => {
@@ -292,7 +292,7 @@ export const useMouseEvents = (
     if (currentStroke && !(currentStroke instanceof TextStroke) && !selection.selectBoxExists) {
       // Handle magic box tool - trigger OCR on mouse up
       if (currentStroke.id === "magicbox") {
-        await magicBoxTool.endMagicBox(canvasRef, currentStroke as ShapeStroke);
+        await magicBoxTool.endMagicBox(currentStroke as ShapeStroke);
         setCurrentStroke(null);
         return;
       }

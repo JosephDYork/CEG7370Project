@@ -1,4 +1,4 @@
-import type { StrokeType } from "../models/strokes";
+import type { Stroke } from "../models/strokes";
 import type { FreeStroke } from "../models/free-stroke";
 import type { TextStroke } from "../models/text-stroke";
 import type { LineStroke } from "../models/line-stroke";
@@ -57,13 +57,13 @@ function shapeStrokeToSVG(stroke: ShapeStroke): string {
   const y = Math.min(y1, y2);
 
   if (stroke.shapeType === "square") {
-    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="${stroke.color}" stroke-width="${stroke.lineSize}" fill="none" />`;
+    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="none" />`;
   } else if (stroke.shapeType === "ellipse") {
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
     const rx = width / 2;
     const ry = height / 2;
-    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke.color}" stroke-width="${stroke.lineSize}" fill="none" />`;
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="none" />`;
   }
 
   return "";
@@ -72,7 +72,7 @@ function shapeStrokeToSVG(stroke: ShapeStroke): string {
 /**
  * Converts a single stroke to its SVG representation
  */
-function strokeToSVG(stroke: StrokeType): string {
+function strokeToSVG(stroke: Stroke): string {
   switch (stroke.type) {
     case "free":
       return freeStrokeToSVG(stroke as FreeStroke);
@@ -90,7 +90,7 @@ function strokeToSVG(stroke: StrokeType): string {
 /**
  * Calculates the bounding box for all strokes
  */
-function calculateBoundingBox(strokes: StrokeType[]): {
+function calculateBoundingBox(strokes: Stroke[]): {
   minX: number;
   minY: number;
   maxX: number;
@@ -107,12 +107,8 @@ function calculateBoundingBox(strokes: StrokeType[]): {
   let maxX = -Infinity;
   let maxY = -Infinity;
 
-  // Create a temporary canvas context for text measurements
-  const tempCanvas = document.createElement("canvas");
-  const ctx = tempCanvas.getContext("2d");
-
   strokes.forEach((stroke) => {
-    const [x1, y1, x2, y2] = stroke.getBoundingBox(ctx || undefined);
+    const [x1, y1, x2, y2] = stroke.getBoundingBox();
     minX = Math.min(minX, x1);
     minY = Math.min(minY, y1);
     maxX = Math.max(maxX, x2);
@@ -139,7 +135,7 @@ function calculateBoundingBox(strokes: StrokeType[]): {
 /**
  * Exports all strokes as an SVG string
  */
-export function exportToSVG(strokes: StrokeType[]): string {
+export function exportToSVG(strokes: Stroke[]): string {
   const bbox = calculateBoundingBox(strokes);
 
   const svgElements = strokes
@@ -175,7 +171,7 @@ export function downloadSVG(svgContent: string, filename: string = "polyboard.sv
 /**
  * Exports and downloads the whiteboard as an SVG file
  */
-export function exportWhiteboardToSVG(strokes: StrokeType[], filename?: string): void {
+export function exportWhiteboardToSVG(strokes: Stroke[], filename?: string): void {
   const svgContent = exportToSVG(strokes);
   downloadSVG(svgContent, filename);
 }
