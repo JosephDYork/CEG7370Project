@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useWebSocket } from "../../hooks/web-sockets";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 import "./toolspanel.css";
 
 const ToolsPanel = () => {

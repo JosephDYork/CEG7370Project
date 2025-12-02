@@ -13,17 +13,12 @@ from ocr_service import decode_b64img, OCRService, OCRRequest, OCRResponse, Text
 from dotenv import load_dotenv
 
 
-app = FastAPI(debug=True)
+app = FastAPI()
 load_dotenv()
-
-origins = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -205,8 +200,11 @@ async def translate_text(req: TranslateRequest):
     """
     api_url = os.environ.get("TRANSLATE_API_URL")
 
+    if req.source_language == req.target_language:
+        return TranslateResponse(translated_text=req.text)
+
+
     if not api_url:
-        # Fallback mock translation (no external calls)
         translated = f"{req.text} [translated to {req.target_language}]"
         return TranslateResponse(translated_text=translated)
 
@@ -223,10 +221,11 @@ async def translate_text(req: TranslateRequest):
             resp = await client.post(api_url, json=payload)
             resp.raise_for_status()
             data = resp.json()
-            # LibreTranslate returns: {translatedText: ...}
+
             translated_text = data.get("translatedText")
             if not translated_text:
                 translated_text = f"{req.text} [translated to {req.target_language}]"
+
             return TranslateResponse(translated_text=translated_text)
         except Exception as e:
             # On any error, return mock translation so UI remains responsive
