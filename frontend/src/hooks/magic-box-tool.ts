@@ -13,7 +13,6 @@ import {
   renderShapeStroke,
   renderTextStroke,
 } from "../rendering";
-import api from "../api";
 
 export const useMagicBoxTool = () => {
   const { brushTool, getCurrentLanguage } = useEditorStore();
@@ -137,15 +136,21 @@ export const useMagicBoxTool = () => {
         reader.readAsDataURL(blob);
       });
 
-      const response = await api.post("/ocr", {
-        image: base64Image,
-        x: minX,
-        y: minY,
-        width: width,
-        height: height,
+      const response = await fetch("/ocr", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+          x: minX,
+          y: minY,
+          width: width,
+          height: height,
+        }),
       });
 
-      const result = response.data;
+      const result = await response.json();
       setProgress({ status: "Processing results...", progress: 0.8 });
       const newTextStrokes: TextStroke[] = result.textBlocks
         .filter((block: any) => block.confidence >= 60)

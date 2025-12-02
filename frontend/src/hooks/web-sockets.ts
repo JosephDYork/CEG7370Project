@@ -10,7 +10,7 @@ import { LineStroke } from "../models/line-stroke";
 import { ShapeStroke } from "../models/shape-stroke";
 import { useChatStore } from "../stores/chat-store";
 
-export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
+export const useWebSocket = (url: string = "/ws") => {
   const { addMessages, getAllMessages, setAllMessages } = useChatStore();
   const {
     addStrokes,
@@ -214,7 +214,7 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
 
     const promises = messages.map(async (message) => {
       if (message.languageCode !== currentLang) {
-        const response = await fetch("http://localhost:8000/translate", {
+        const response = await fetch("/translate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -263,7 +263,7 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
     textStroke: TextStroke,
     targetLang: string
   ) => {
-    const response = await fetch("http://localhost:8000/translate", {
+    const response = await fetch("/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
