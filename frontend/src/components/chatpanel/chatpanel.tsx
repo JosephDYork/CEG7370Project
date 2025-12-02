@@ -38,7 +38,7 @@ const ChatPanel = () => {
       });
 
       const data = await resp.json();
-      const translated = data?.translated_text ?? `${originalMessage} [translated to ${languageCode}]`;
+      const translated = data?.translated_text ?? `${originalMessage}`;
 
       // Replace optimistic message (last one) with final translated message
       const currentMessages = useChatStore.getState().messages;

@@ -9,6 +9,7 @@ import { TextStroke } from "../models/text-stroke";
 import { LineStroke } from "../models/line-stroke";
 import { ShapeStroke } from "../models/shape-stroke";
 import { useChatStore } from "../stores/chat-store";
+import { attempt } from "lodash";
 
 export const useWebSocket = (url: string = "/ws") => {
   const { addMessages, getAllMessages, setAllMessages } = useChatStore();
@@ -35,6 +36,13 @@ export const useWebSocket = (url: string = "/ws") => {
     if (webSocket?.readyState === WebSocket.OPEN) {
       webSocket.send(JSON.stringify(message));
     }
+  };
+
+  const attemptReconnectAndSync = () => {
+    attempt(() => {
+      connectWebSocket();
+      sendInitializationMessage();
+    }, 5, 2000);
   };
 
   const sendInitializationMessage = () => {
@@ -102,7 +110,7 @@ export const useWebSocket = (url: string = "/ws") => {
       case "line":
         return new LineStroke(s.id, s.color, s.size, s.startPoint, s.endPoint);
       case "shape":
-        return new ShapeStroke(s.id, s.shapeType, s.color, s.lineSize, s.origin, s.termination);
+        return new ShapeStroke(s.id, s.color, s.size, s.shapeType, s.origin, s.termination);
       default:
         throw new Error(`Unknown stroke type: ${s.type}`);
     }
@@ -121,15 +129,22 @@ export const useWebSocket = (url: string = "/ws") => {
           break;
         case "RemoveStrokes":
           removeStrokes(msg.payload.map(buildStroke));
-          if (
-            msg.payload.some(
+          if (msg.payload.some(
               (s: any) => s.id in [...focusedStrokes].map((fs) => fs.id)
             )
           ) {
             clearFocusedStrokes();
           }
+
           break;
         case "UpdateStrokes":
+          if (msg.payload.some(
+              (s: any) => s.id in [...focusedStrokes].map((fs) => fs.id)
+            )
+          ) {
+            clearFocusedStrokes();
+          }
+
           updateStrokes(msg.payload.map(buildStroke));
           break;
         case "FullState":
@@ -312,6 +327,7 @@ export const useWebSocket = (url: string = "/ws") => {
     socket.onerror = (error) => {
       console.error("WebSocket error:", error);
       setIsSocketConnected(false);
+      attemptReconnectAndSync();
     };
   }, [url, setWebSocket, setIsSocketConnected]);
 

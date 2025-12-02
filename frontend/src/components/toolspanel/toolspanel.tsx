@@ -2,37 +2,47 @@ import { useMemo } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useWebSocket } from "../../hooks/web-sockets";
-import debounce from "lodash/debounce";
+import { debounce } from "lodash";
 import "./toolspanel.css";
 
 const ToolsPanel = () => {
   const { sendUpdateBoardMessage } = useWebSocket();
   const { updateStrokes } = useBoardStore();
-  const { brushTool, focusedStrokes, setBrushColor, setBrushSize } = useEditorStore();
-  const debouncedUpdate = useMemo(() => debounce(sendUpdateBoardMessage, 100), []);
+  const { brushTool, focusedStrokes, clearFocusedStrokes, addFocusedStroke, setBrushColor, setBrushSize } = useEditorStore();
+  const debouncedUpdate = useMemo(() => debounce(sendUpdateBoardMessage, 100), [sendUpdateBoardMessage]);
 
   // We might want to just consider debouncing the whole function here tbh.
   const onBrushColorChange = (event: React.FormEvent<HTMLInputElement>) => {
     const color = event.currentTarget.value;
+
     setBrushColor(color);
-    updateStrokes(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ color: color }))
-    );
-    debouncedUpdate(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ color: color }))
-    )
+    const newStrokes = [...focusedStrokes].map((stroke) => stroke.withUpdates({ color: color }));
+
+    updateStrokes(newStrokes);
+    debouncedUpdate(newStrokes);
+
+    clearFocusedStrokes();
+    newStrokes.forEach((stroke) => addFocusedStroke(stroke));
   };
 
   // Same thing with this one, although it's not as pressing as the color picking experience.
   const onBrushSizeChange = (event: React.FormEvent<HTMLInputElement>) => {
     const size = parseInt(event.currentTarget.value, 10);
+
     setBrushSize(size);
-    updateStrokes(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size * 8 }))
-    );
-    debouncedUpdate(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size * 8 }))
-    )
+    const newStrokes = [...focusedStrokes].map((stroke) => {
+      if (stroke.type === "text") {
+        return stroke.withUpdates({ size: size * 8 })
+      } else {
+        return stroke.withUpdates({ size: size })
+      }
+  })
+
+    updateStrokes(newStrokes);
+    debouncedUpdate(newStrokes);
+
+    clearFocusedStrokes();
+    newStrokes.forEach((stroke) => addFocusedStroke(stroke));
   };
 
   const isToolbarVisible = () => {

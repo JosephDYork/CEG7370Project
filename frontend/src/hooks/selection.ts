@@ -25,9 +25,9 @@ export const useSelectionTool = () => {
     clearFocusedStrokes();
     const selectBox = new ShapeStroke(
       "selectbox",
-      "square",
       "#0000FF",
       2,
+      "square",
       coords,
       coords
     );

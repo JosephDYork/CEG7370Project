@@ -90,9 +90,9 @@ export const useMouseEvents = (
       case "ellipse":
         return new ShapeStroke(
           strokeId,
-          brushTool,
           brushColor,
           brushSize,
+          brushTool,
           [x, y],
           [x, y]
         );
@@ -178,9 +178,9 @@ export const useMouseEvents = (
       // time on this project.
       setCurrentStroke(new ShapeStroke(
         `erase-box-${Date.now()}`,
-        "ellipse",
         "#000000",
         1,
+        "ellipse",
         [worldCoords[0] - 5, worldCoords[1] - 5],
         [worldCoords[0] + 5, worldCoords[1] + 5]
       ))
@@ -251,9 +251,9 @@ export const useMouseEvents = (
       // Just keep manually redrawing the erase circle, since we are doing it this way.
       setCurrentStroke(new ShapeStroke(
         `erase-box-${Date.now()}`,
-        "ellipse",
         "#000000",
         1,
+        "ellipse",
         [worldCoords[0] - 5, worldCoords[1] - 5],
         [worldCoords[0] + 5, worldCoords[1] + 5]
       ))

@@ -37,9 +37,9 @@ export const useMagicBoxTool = () => {
     setMagicBoxExists(true);
     const magicBox = new ShapeStroke(
       "magicbox",
-      "square",
       "#FF6B6B",
       3,
+      "square",
       coords,
       coords
     );
