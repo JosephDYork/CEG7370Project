@@ -10,8 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from messages import PolyboardMessage
 from ocr_service import decode_b64img, OCRService, OCRRequest, OCRResponse, TextBlock
+from dotenv import load_dotenv
+
 
 app = FastAPI(debug=True)
+load_dotenv()
 
 origins = [
     "http://127.0.0.1:5173",
@@ -32,14 +35,14 @@ active_connections: Set[WebSocket] = set()
 ocr_service = OCRService()
 
 
-async def broadcast_to_all(message_type: str, payload: dict, exclude_websocket: WebSocket = None):
+async def broadcast_to_all(message_type: str, subsystem: str, payload: dict, exclude_websocket: WebSocket = None):
     disconnected = set()
     print("Sending updates to connections...")
     outgoing = PolyboardMessage(**{
         "user_id": "server",
         "room_id": "room1",
         "type": message_type,
-        "subsystem": "whiteboard",
+        "subsystem": subsystem,
         "payload": payload
     })
 
@@ -69,37 +72,39 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             message = PolyboardMessage(**data)
+            print(f"Received message: {message.model_dump()}")
+
+            if (message.subsystem == "chat"):
+                match message.type:
+                    case "NewMessage":
+                        for chat in message.payload:
+                            update_payload = chat_state.add_message(chat)
+                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
+                            continue
 
             if (message.subsystem == "whiteboard"):
                 match message.type:
                     case "AddStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.addStroke(stroke)
-                            await broadcast_to_all(message.type, update_payload, websocket)
+                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
                             continue
                     case "RemoveStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.removeStroke(stroke)
-                            await broadcast_to_all(message.type, update_payload, websocket)
+                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
                             continue
                     case "UpdateStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.updateStroke(stroke)
-                            await broadcast_to_all(message.type, update_payload, websocket)
+                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
                             continue
-
-            # TODO: Rebuild the chat subsystem handling to deal with new message format
-            # elif message.message_type == "chat_update":
-            #     chat_data = data.get("chat_state")
-            #     if chat_data:
-            #         chat_state.roomId = chat_data.get("roomId", chat_state.roomId)
-            #         chat_state.messages = chat_data.get("messages", chat_state.messages)
-            #         print(f"Total messages in memory: {len(chat_state.messages)}")
-
-            #         await broadcast_to_all(
-            #             {"type": "chat_update", "chat_state": chat_state.model_dump()},
-            #             exclude_websocket=websocket,
-            #         )
+                    case "RequestFullState":
+                        await websocket.send_json({
+                            "type": "FullState",
+                            "subsystem": "whiteboard",
+                            "payload": board_state.model_dump(),
+                        })
 
     except WebSocketDisconnect:
         print("Client disconnected")

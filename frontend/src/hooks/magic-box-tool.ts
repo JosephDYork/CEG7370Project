@@ -16,7 +16,7 @@ import {
 import api from "../api";
 
 export const useMagicBoxTool = () => {
-  const { brushTool } = useEditorStore();
+  const { brushTool, getCurrentLanguage } = useEditorStore();
   const { strokes, addStrokes, removeStrokes } = useBoardStore();
   const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket();
   const { 
@@ -106,7 +106,7 @@ export const useMagicBoxTool = () => {
             renderShapeStroke(ctx, stroke as ShapeStroke, [], []);
             break;
           case "text":
-            renderTextStroke(ctx, stroke as TextStroke, [], []);
+            renderTextStroke(ctx, stroke as TextStroke, [], [], getCurrentLanguage());
             break;
         }
       }
@@ -157,7 +157,9 @@ export const useMagicBoxTool = () => {
           "#000000",
             block.height || 16,
             [worldX, worldY],
-            block.text
+            block.text,
+            getCurrentLanguage(),
+            {}
         );
       });
 

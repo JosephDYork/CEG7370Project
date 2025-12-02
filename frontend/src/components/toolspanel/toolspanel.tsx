@@ -5,25 +5,6 @@ import { useWebSocket } from "../../hooks/web-sockets"
 import { debounce } from "lodash";
 import "./toolspanel.css";
 
-const mathSymbols = [
-  "+",
-  "-",
-  "*",
-  "÷",
-  "∫",
-  "∑",
-  "√",
-  "∏",
-  "≤",
-  "≥",
-  "≠",
-  "±",
-  "∆",
-  "π",
-  "θ",
-  "λ",
-];
-
 const ToolsPanel = () => {
   const { sendUpdateBoardMessage } = useWebSocket()
   const { updateStrokes } = useBoardStore();
@@ -73,13 +54,7 @@ const ToolsPanel = () => {
         onInput={onBrushSizeChange}
         defaultValue={2}
       />
-      <h3 className="toolspanel-header">MATH SYMBOLS</h3>
       <div className="math-symbols-grid">
-        {mathSymbols.map((symbol) => (
-          <button key={symbol} className="math-symbol-button">
-            {symbol}
-          </button>
-        ))}
       </div>
     </div>
   );

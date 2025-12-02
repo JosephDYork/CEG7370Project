@@ -47,7 +47,6 @@ class OCRService:
         except Exception as e:
             print(f"Failed to create or initialize AWS session: {e}")
 
-    @staticmethod
     async def extract_text(self, filename: str, image: Image.Image):
         response = self.textract_client.detect_document_text(
             Document={"S3Object": {"Bucket": self.bucket_name, "Name": filename}}

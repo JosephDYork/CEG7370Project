@@ -11,6 +11,7 @@ interface EditorState {
   undoStack: Stroke[];
   isSocketConnected: boolean;
   webSocket: WebSocket | null;
+  currentLanguage: string;
 }
 
 interface EditorActions {
@@ -29,6 +30,8 @@ interface EditorActions {
   getWebSocket: () => WebSocket | null;
   setIsSocketConnected: (isConnected: boolean) => void;
   getIsSocketConnected: () => boolean;
+  setCurrentLanguage: (language: string) => void;
+  getCurrentLanguage: () => string;
 }
 
 export const useEditorStore = create<EditorState & EditorActions>(
@@ -42,6 +45,7 @@ export const useEditorStore = create<EditorState & EditorActions>(
     undoStack: [],
     isSocketConnected: false,
     webSocket: null,
+    currentLanguage: "en",
 
     setBrushTool: (brushTool) =>
       set((state) => ({
@@ -127,6 +131,15 @@ export const useEditorStore = create<EditorState & EditorActions>(
 
     getIsSocketConnected: () => {
       return get().isSocketConnected;
+    },
+    setCurrentLanguage: (language) =>
+      set((state) => ({
+        ...state,
+        currentLanguage: language,
+      })),
+
+    getCurrentLanguage: () => {
+      return get().currentLanguage;
     },
   })
 );

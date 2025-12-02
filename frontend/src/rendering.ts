@@ -65,11 +65,21 @@ export const renderTextStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: TextStroke,
   focusedStrokes: Stroke[],
-  erasingStrokes: Stroke[]
+  erasingStrokes: Stroke[],
+  currentLanguage: string
 ) => {
   ctx.font = `${stroke.size}px Arial`;
   ctx.fillStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
-  ctx.fillText(stroke.text, stroke.position[0], stroke.position[1]);
+
+  let displayText; // gotta use a mutable here
+  if (stroke.translations)
+  {
+    displayText = stroke.translations[currentLanguage] || stroke.srcText;
+  } else {
+    displayText = stroke.srcText;
+  }
+
+  ctx.fillText(displayText, stroke.position[0], stroke.position[1]);
   if (focusedStrokes.some((s) => s.id === stroke.id))
     renderBoundingBox(ctx, stroke);
 };
@@ -96,7 +106,6 @@ export const renderLineStroke = (
   stroke: LineStroke,
   focusedStrokes: Stroke[],
   erasingStrokes: Stroke[]
-
 ) => {
   ctx.beginPath();
   ctx.lineWidth = stroke.size;

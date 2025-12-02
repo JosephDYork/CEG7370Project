@@ -3,53 +3,55 @@ import { useChatStore, ChatMessage as ChatMessageModel } from "../../stores/chat
 import "./chatpanel.css";
 import { useState } from "react";
 import api from "../../api";
-import { useTranslationStore } from "../../stores/translation-store";
+import { useEditorStore } from "../../stores/editor-store";
+import { useWebSocket } from "../../hooks/web-sockets";
 
 const ChatPanel = () => {
-  const messages = useChatStore((state) => state.messages);
-  const addMessage = useChatStore((state) => state.addMessage);
-  const removeMessage = useChatStore((state) => state.removeMessage);
   const [text, setText] = useState("");
-  const targetLanguage = useTranslationStore((state) => state.targetLanguage);
+  const {messages, addMessages, removeMessages } = useChatStore();
+  const { getCurrentLanguage } = useEditorStore();
+  const { sendChatMessage } = useWebSocket();
 
   const sendMessage = async () => {
     if (!text || text.trim().length === 0) return;
 
     const userName = "You";
-    const languageCode = targetLanguage;
+    const languageCode = getCurrentLanguage();
     const originalMessage = text.trim();
     const optimistic = new ChatMessageModel(userName, languageCode, originalMessage, "Translating...");
 
     // Add optimistic message
-    addMessage(optimistic);
+    addMessages([optimistic]);
     setText("");
 
     try {
       const resp = await api.post("/translate", {
         text: originalMessage,
-        target_language: targetLanguage,
+        target_language: languageCode,
       });
 
-      const translated = resp?.data?.translated_text ?? `${originalMessage} [translated to ${targetLanguage}]`;
+      const translated = resp?.data?.translated_text ?? `${originalMessage} [translated to ${languageCode}]`;
 
       // Replace optimistic message (last one) with final translated message
       const currentMessages = useChatStore.getState().messages;
       const lastIndex = currentMessages.length - 1;
       if (lastIndex >= 0) {
-        removeMessage(lastIndex);
+        removeMessages([lastIndex]);
       }
 
       const updated = new ChatMessageModel(userName, languageCode, originalMessage, translated);
-      addMessage(updated);
+      addMessages([updated]);
+      sendChatMessage(updated);
     } catch {
-      const fallback = `${originalMessage} [translated to ${targetLanguage}]`;
+      const fallback = `${originalMessage} [translated to ${languageCode}]`;
       const currentMessages = useChatStore.getState().messages;
       const lastIndex = currentMessages.length - 1;
       if (lastIndex >= 0) {
-        removeMessage(lastIndex);
+        removeMessages([lastIndex]);
       }
       const updated = new ChatMessageModel(userName, languageCode, originalMessage, fallback);
-      addMessage(updated);
+      addMessages([updated]);
+      sendChatMessage(updated);
     }
   };
 

@@ -10,9 +10,11 @@ interface boardActions {
   addStrokes: (strokes: Stroke[], fromServer?: boolean) => void;
   removeStrokes: (strokes: Stroke[], fromServer?: boolean) => void;
   updateStrokes: (updatedStrokes: Stroke[], fromServer?: boolean) => void;
+  getAllStrokes: () => Stroke[];
+  setAllStrokes: (strokes: Stroke[]) => void;
 }
 
-export const useBoardStore = create<boardState & boardActions>((set) => ({
+export const useBoardStore = create<boardState & boardActions>((set, get) => ({
   version: 1.0,
   strokes: [],
 
@@ -39,6 +41,17 @@ export const useBoardStore = create<boardState & boardActions>((set) => ({
         const updatedStroke = updatedStrokes.find((us) => us.id === s.id);
         return updatedStroke ? updatedStroke : s;
       }),
+    }));
+  },
+
+  getAllStrokes: () => {
+    return get().strokes;
+  },
+
+  setAllStrokes: (strokes) => {
+    set((state) => ({
+      ...state,
+      strokes: strokes,
     }));
   },
 }));
