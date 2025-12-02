@@ -3,6 +3,9 @@ import { useBoardStore } from "../stores/board-store";
 import { useEditorStore } from "../stores/editor-store";
 import { useWebSocket } from "./web-sockets";
 
+// this needs to be global if you want cross-instance memory margish
+let previousTool: string | null = null;
+
 export const useKeyboardEvents = () => {
   const { addStrokes, removeStrokes } = useBoardStore();
   const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket()
@@ -15,7 +18,6 @@ export const useKeyboardEvents = () => {
     setBrushTool,
   } = useEditorStore();
 
-  let previousTool: string | null = null;
 
   const updateTextStroke = (text: string) => {
     if (currentStroke?.type !== "text") return;
@@ -69,21 +71,16 @@ export const useKeyboardEvents = () => {
         clearFocusedStrokes();
         setCurrentStroke(null);
         break;
-      case " ": // Space key for pan
+      case " ":
         if (brushTool !== "pan") {
           previousTool = brushTool;
           setBrushTool("pan");
         }
         break;
-      case "m": // 'M' key for Magic Box OCR tool
-      case "M":
-        setBrushTool("magicbox");
-        break;
     }
   };
 
   const handleKeyUp = (e: KeyboardEvent) => {
-    // Release space key - return to previous tool
     if (e.key === " " && brushTool === "pan" && previousTool) {
       setBrushTool(previousTool);
       previousTool = null;

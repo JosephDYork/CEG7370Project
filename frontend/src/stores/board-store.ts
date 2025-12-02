@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Stroke } from "../models/strokes";
+import type { TextStroke } from "../models/text-stroke";
 
 interface boardState {
   version: number;
@@ -39,6 +40,16 @@ export const useBoardStore = create<boardState & boardActions>((set, get) => ({
       ...state,
       strokes: state.strokes.map((s) => {
         const updatedStroke = updatedStrokes.find((us) => us.id === s.id);
+
+        if (updatedStroke?.type === "text" && s.type === "text" ) {
+          (updatedStroke as TextStroke).translations = {
+
+            // We have to actually cast these to access this property without ticking off the TS server.
+            ...(s as TextStroke).translations,
+            ...(updatedStroke as TextStroke).translations
+          }
+        }
+
         return updatedStroke ? updatedStroke : s;
       }),
     }));

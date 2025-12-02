@@ -15,9 +15,7 @@ export const OCRProgress = () => {
   return (
     <div className="ocr-progress-overlay">
       <div className="ocr-progress-modal">
-        <div className="ocr-progress-icon" style={{
-          animation: isError || isWarning ? 'none' : 'pulse 1.5s ease-in-out infinite'
-        }}>
+        <div className="ocr-progress-icon">
           {isError ? '❌' : isWarning ? '⚠️' : '✨'}
         </div>
         <h3 className="ocr-progress-title">

@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
-import { useWebSocket } from "../../hooks/web-sockets"
+import { useWebSocket } from "../../hooks/web-sockets";
 import { debounce } from "lodash";
 import "./toolspanel.css";
 
 const ToolsPanel = () => {
-  const { sendUpdateBoardMessage } = useWebSocket()
+  const { sendUpdateBoardMessage } = useWebSocket();
   const { updateStrokes } = useBoardStore();
-  const { focusedStrokes, setBrushColor, setBrushSize } = useEditorStore();
+  const { brushTool, focusedStrokes, setBrushColor, setBrushSize } = useEditorStore();
   const debouncedUpdate = useMemo(() => debounce(sendUpdateBoardMessage, 100), []);
 
   // We might want to just consider debouncing the whole function here tbh.
@@ -28,35 +28,46 @@ const ToolsPanel = () => {
     const size = parseInt(event.currentTarget.value, 10);
     setBrushSize(size);
     updateStrokes(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size }))
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size * 8 }))
     );
     debouncedUpdate(
-      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size }))
+      [...focusedStrokes].map((stroke) => stroke.withUpdates({ size: size * 8 }))
     )
   };
 
+  const isToolbarVisible = () => {
+    return (
+      brushTool !== "pan" &&
+      brushTool !== "erase" &&
+      brushTool !== "magicbox" &&
+      (brushTool !== "select" || focusedStrokes.size > 0)
+    );
+  };
+
   return (
-    <div className="toolspanel-container floating-ui">
-      <h3 className="toolspanel-header">Brush Tools</h3>
-      <p>Color:</p>
-      <input
-        type="color"
-        className="color-picker"
-        onInput={onBrushColorChange}
-        defaultValue={"#000000"}
-      />
-      <p>Brush Size:</p>
-      <input
-        type="range"
-        min="1"
-        max="10"
-        className="brush-size-slider"
-        onInput={onBrushSizeChange}
-        defaultValue={2}
-      />
-      <div className="math-symbols-grid">
+    isToolbarVisible() && (
+      <div className="toolspanel-container floating-ui">
+        <h3 className="toolspanel-header">Brush Tools</h3>
+        <p>Color:</p>
+        <input
+          type="color"
+          className="color-picker"
+          onInput={onBrushColorChange}
+          defaultValue={"#000000"}
+        />
+        <p>Brush Size:</p>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          className="brush-size-slider"
+          onInput={onBrushSizeChange}
+          defaultValue={2}
+        />
+        <div className="math-symbols-grid">
+        </div>
       </div>
-    </div>
+    )
   );
 };
 

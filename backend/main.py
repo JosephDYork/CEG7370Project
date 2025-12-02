@@ -29,44 +29,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-board_state = BoardState()
-chat_state = ChatState()
-active_connections: Set[WebSocket] = set()
+room_board_states: dict[str, BoardState] = {}
+room_chat_states: dict[str, ChatState] = {}
+room_connections: dict[str, Set[WebSocket]] = {}
 ocr_service = OCRService()
 
 
-async def broadcast_to_all(message_type: str, subsystem: str, payload: dict, exclude_websocket: WebSocket = None):
-    disconnected = set()
-    print("Sending updates to connections...")
-    outgoing = PolyboardMessage(**{
-        "user_id": "server",
-        "room_id": "room1",
-        "type": message_type,
-        "subsystem": subsystem,
-        "payload": payload
-    })
+def get_or_create_board_state(room_id: str) -> BoardState:
+    if room_id not in room_board_states:
+        room_board_states[room_id] = BoardState()
+    return room_board_states[room_id]
 
-    for connection in list(active_connections):
+
+def get_or_create_chat_state(room_id: str) -> ChatState:
+    if room_id not in room_chat_states:
+        room_chat_states[room_id] = ChatState()
+    return room_chat_states[room_id]
+
+
+async def broadcast_to_room(
+    room_id: str,
+    message_type: str,
+    subsystem: str,
+    payload: dict,
+    exclude_websocket: WebSocket = None,
+):
+    if room_id not in room_connections:
+        return
+
+    disconnected = set()
+    outgoing = PolyboardMessage(
+        **{
+            "user_id": "server",
+            "room_id": room_id,
+            "type": message_type,
+            "subsystem": subsystem,
+            "payload": payload,
+        }
+    )
+
+    for connection in list(room_connections[room_id]):
         if connection == exclude_websocket:
             continue
 
         try:
-            print(outgoing.model_dump())
             await connection.send_json(outgoing.model_dump())
         except Exception as e:
             print(f"Error sending to client: {e}")
             disconnected.add(connection)
 
     for conn in disconnected:
-        active_connections.discard(conn)
+        room_connections[room_id].discard(conn)
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    global board_state, chat_state
-
     await websocket.accept()
-    active_connections.add(websocket)
+    current_room_id = None
 
     try:
         while True:
@@ -74,12 +93,53 @@ async def websocket_endpoint(websocket: WebSocket):
             message = PolyboardMessage(**data)
             print(f"Received message: {message.model_dump()}")
 
+            if current_room_id != message.room_id:
+                if current_room_id in room_connections:
+                    room_connections[current_room_id].discard(websocket)
+
+                current_room_id = message.room_id
+                if current_room_id not in room_connections:
+                    room_connections[current_room_id] = set()
+                room_connections[current_room_id].add(websocket)
+
+            board_state = get_or_create_board_state(message.room_id)
+            chat_state = get_or_create_chat_state(message.room_id)
+
+            if message.subsystem == "initialization":
+                match message.type:
+                    case "RequestFullState":
+                        print("Sending full state to new client...")
+                        await websocket.send_json(PolyboardMessage(
+                            **{
+                                "user_id": "server",
+                                "room_id": current_room_id,
+                                "type": "FullState",
+                                "subsystem": "whiteboard",
+                                "payload": board_state.strokes,
+                            }
+                        ).model_dump())
+                        await websocket.send_json(PolyboardMessage(
+                            **{
+                                "user_id": "server",
+                                "room_id": current_room_id,
+                                "type": "FullState",
+                                "subsystem": "chat",
+                                "payload": chat_state.messages,
+                            }
+                        ).model_dump())
+
             if (message.subsystem == "chat"):
                 match message.type:
                     case "NewMessage":
                         for chat in message.payload:
                             update_payload = chat_state.add_message(chat)
-                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
+                            await broadcast_to_room(
+                                message.room_id,
+                                message.type,
+                                message.subsystem,
+                                update_payload,
+                                websocket,
+                            )
                             continue
 
             if (message.subsystem == "whiteboard"):
@@ -87,31 +147,44 @@ async def websocket_endpoint(websocket: WebSocket):
                     case "AddStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.addStroke(stroke)
-                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
+                            await broadcast_to_room(
+                                message.room_id,
+                                message.type,
+                                message.subsystem,
+                                update_payload,
+                                websocket,
+                            )
                             continue
                     case "RemoveStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.removeStroke(stroke)
-                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
+                            await broadcast_to_room(
+                                message.room_id,
+                                message.type,
+                                message.subsystem,
+                                update_payload,
+                                websocket,
+                            )
                             continue
                     case "UpdateStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.updateStroke(stroke)
-                            await broadcast_to_all(message.type, message.subsystem, update_payload, websocket)
+                            await broadcast_to_room(
+                                message.room_id,
+                                message.type,
+                                message.subsystem,
+                                update_payload,
+                                websocket,
+                            )
                             continue
-                    case "RequestFullState":
-                        await websocket.send_json({
-                            "type": "FullState",
-                            "subsystem": "whiteboard",
-                            "payload": board_state.model_dump(),
-                        })
 
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
-        active_connections.discard(websocket)
+        if current_room_id in room_connections:
+            room_connections[current_room_id].discard(websocket)
 
 
 class TranslateRequest(BaseModel):

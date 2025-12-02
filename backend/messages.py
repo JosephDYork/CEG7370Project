@@ -5,10 +5,6 @@ from pydantic import BaseModel
 from board_store import FreeStroke, TextStroke, LineStroke, ShapeStroke
 from chat_store import ChatMessage
 
-class PolyboardCursorStateMessage(BaseModel):
-    action: str
-    cursors_state: str # Placeholder for future cursor state implementation
-
 
 class PolyboardMessage(BaseModel):
     user_id: str

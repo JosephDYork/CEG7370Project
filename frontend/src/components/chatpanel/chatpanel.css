@@ -1,29 +1,48 @@
 .chatpanel-container {
   position: absolute;
-  top: 5rem;
-  right: 0.5rem;
-  height: calc(100vh - 8.5rem);
+  top: 4rem;
+  right: 0;
+  height: calc(100vh - 4rem);
   width: 20rem;
-  min-width: 20rem;
+  border-radius: 12px 0 0 0;
   background-color: rgba(248, 250, 252, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   color: black;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  z-index: 50;
+}
+
+.chatpanel-container.collapsed {
+  width: auto;
+  background-color: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+}
+
+.chatpanel-toggle-button {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.5rem;
+  background: #14b8a6;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  border-radius: 8px;
+}
+
+.chatpanel-toggle-button:hover {
+  background: #0d9488;
 }
 
 .chatpanel-header {
   background: linear-gradient(135deg, #e6fffa 0%, #f0fdfa 100%);
   border-bottom: 2px solid #14b8a6;
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  border-top-left-radius: 12px;
+  padding: 0.75rem 3rem 0.75rem 0.75rem;
   box-shadow: 0 2px 4px #00000014;
 }
 
@@ -43,15 +62,13 @@
 }
 
 .chatpanel-text-input {
-  height: 100%;
   border-radius: 10px;
-  background-color: #ffffff;
-  border-style: none;
+  background-color: #fff;
+  border: none;
   flex: 1;
   color: black;
   padding: 0.5rem;
   outline: none;
-  min-width: 0;
   height: 70%;
 }
 
@@ -65,29 +82,27 @@
   display: flex;
   align-items: end;
   gap: 0.5rem;
-  min-width: 0;
 }
 
 .chatpanel-send-button {
   background-color: #14b8a6;
   border: none;
   color: white;
-  padding: 0.5rem;
-  border-radius: 20px;
+  border-radius: 10px;
   cursor: pointer;
-  min-width: 2.5rem;
-  height: 2.5rem;
+  width: 2.3rem;
+  height: 2.3rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.chatpanel-send-button:hover {
+  background: #0d9488;
 }
 
 .chatpanel-input-icon {
   cursor: pointer;
-  margin: 0;
-  padding: 0;
-  fill: white;
-  width: 16px;
-  height: 16px;
 }

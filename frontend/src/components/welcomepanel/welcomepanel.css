@@ -1,0 +1,71 @@
+.welcome-panel {
+  position: fixed;
+  inset: 0;
+  background: #00000099;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.welcome-panel-modal {
+  background: #ffffff;
+  padding: 3rem 2.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 2rem 4rem #0000004d;
+  max-width: 440px;
+  width: 90%;
+}
+
+.welcome-panel-header {
+  margin: 0;
+  color: #14b8a6;
+  text-align: center;
+}
+
+.welcome-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  color: #000000;
+  padding: 0.9rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 1rem;
+  font-size: 1rem;
+  background: #ffffff;
+  outline: none;
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.join-button {
+  margin-top: 0.8rem;
+  padding: 1rem;
+  background: #14b8a6;
+  color: #ffffff;
+  border: none;
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px #00000030;
+}
