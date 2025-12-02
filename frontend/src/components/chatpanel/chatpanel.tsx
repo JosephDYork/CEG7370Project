@@ -2,7 +2,6 @@ import ChatMessage from "../chatmessage/chatmessage";
 import { useChatStore, ChatMessage as ChatMessageModel } from "../../stores/chat-store";
 import "./chatpanel.css";
 import { useState } from "react";
-import api from "../../api";
 import { useEditorStore } from "../../stores/editor-store";
 import { useWebSocket } from "../../hooks/web-sockets";
 
@@ -27,12 +26,19 @@ const ChatPanel = () => {
     setText("");
 
     try {
-      const resp = await api.post("/translate", {
-        text: originalMessage,
-        target_language: languageCode,
+      const resp = await fetch("/translate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: originalMessage,
+          target_language: languageCode,
+        }),
       });
 
-      const translated = resp?.data?.translated_text ?? `${originalMessage} [translated to ${languageCode}]`;
+      const data = await resp.json();
+      const translated = data?.translated_text ?? `${originalMessage} [translated to ${languageCode}]`;
 
       // Replace optimistic message (last one) with final translated message
       const currentMessages = useChatStore.getState().messages;
