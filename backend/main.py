@@ -127,12 +127,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 match message.type:
                     case "NewMessage":
                         for chat in message.payload:
-                            update_payload = chat_state.add_message(chat)
+                            new_message_payload = chat_state.add_message(chat)
                             await broadcast_to_room(
                                 message.room_id,
                                 message.type,
                                 message.subsystem,
-                                update_payload,
+                                new_message_payload,
                                 websocket,
                             )
                             continue
@@ -141,23 +141,23 @@ async def websocket_endpoint(websocket: WebSocket):
                 match message.type:
                     case "AddStrokes":
                         for stroke in message.payload:
-                            update_payload = board_state.addStroke(stroke)
+                            add_payload = board_state.addStroke(stroke)
                             await broadcast_to_room(
                                 message.room_id,
                                 message.type,
                                 message.subsystem,
-                                update_payload,
+                                add_payload,
                                 websocket,
                             )
                             continue
                     case "RemoveStrokes":
                         for stroke in message.payload:
-                            update_payload = board_state.removeStroke(stroke)
+                            remove_payload = board_state.removeStroke(stroke)
                             await broadcast_to_room(
                                 message.room_id,
                                 message.type,
                                 message.subsystem,
-                                update_payload,
+                                remove_payload,
                                 websocket,
                             )
                             continue
