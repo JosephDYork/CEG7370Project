@@ -6,6 +6,7 @@ import ToolsPanel from "./components/toolspanel/toolspanel";
 import ChatPanel from "./components/chatpanel/chatpanel";
 import Footer from "./components/footer/footer";
 import { OCRProgress } from "./components/ocr-progress/ocr-progress";
+import { WelcomePanel } from "./components/welcomepanel/welcomepanel";
 import "./app.css";
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
         <Footer />
       </div>
       <OCRProgress />
+      <WelcomePanel />
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useEditorStore } from "../../stores/editor-store";
 const Footer = () => {
   const cursorState = useCursorStore((state) => state);
   const viewport = useViewportStore();
-  const { isSocketConnected } = useEditorStore()
+  const { isSocketConnected, username, roomId } = useEditorStore()
   const [worldX, worldY] = viewport.screenToWorld([cursorState.x, cursorState.y]);
 
   const getStatusText = () => {
@@ -22,16 +22,15 @@ const Footer = () => {
   return (
     <div className="footer-container floating-ui">
       <div className="footer-status">
-        <div className="connection-status">
-          <div className={`status-indicator ${getStatusClass()}`}></div>
-          <span className="status-text">{getStatusText()}</span>
+          <div className="connection-status">
+            <div className={`status-indicator ${getStatusClass()}`}></div>
+            <span className="status-text">{getStatusText()}</span>
+          <span className="connection-properties">
+            {Math.round(worldX)}, {Math.round(worldY)}, {Math.round(viewport.zoom * 100)}%
+          </span>
         </div>
-        <span className="cursor-state">
-          ({Math.round(worldX)}, {Math.round(worldY)})
-        </span>
-        <span className="zoom-level">
-          {Math.round(viewport.zoom * 100)}%
-        </span>
+          <span className="connection-properties">User: {username}</span>
+          <span className="connection-properties">Room: {roomId}</span>
       </div>
     </div>
   );

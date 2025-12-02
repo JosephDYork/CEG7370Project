@@ -1,4 +1,5 @@
 import type { Stroke, Point, BoundingBox } from "./strokes";
+import { useEditorStore } from "../stores/editor-store";
 
 export interface ITextStroke extends Stroke {
   size: number;
@@ -44,8 +45,13 @@ export class TextStroke implements ITextStroke {
     const tempCanvas = document.createElement("canvas");
     const ctx = tempCanvas.getContext("2d");
 
+    // Ensure we are actually using the translated text for the bbox.
+    // things were not lining up at all when switching languages.
+    const { currentLanguage } = useEditorStore.getState(); 
+    const text = this.translations[currentLanguage] || this.srcText;
+
     ctx!.font = `${this.size}px Arial`;
-    const textWidth = ctx!.measureText(this.srcText).width;
+    const textWidth = ctx!.measureText(text).width;
 
     return [
       this.position[0],

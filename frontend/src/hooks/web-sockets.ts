@@ -20,10 +20,14 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
     setAllStrokes,
   } = useBoardStore();
   const {
+    username,
+    roomId,
     getWebSocket,
     setWebSocket,
     setIsSocketConnected,
     getCurrentLanguage,
+    focusedStrokes,
+    clearFocusedStrokes,
   } = useEditorStore();
 
   const send = (message: any) => {
@@ -33,11 +37,23 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
     }
   };
 
+  const sendInitializationMessage = () => {
+    send(
+      new PolyboardMessage(
+        username,
+        roomId,
+        "RequestFullState",
+        "initialization",
+        []
+      )
+    );
+  };
+
   const sendAddBoardMessage = (strokesToAdd: Stroke[]) => {
     send(
       new PolyboardMessage(
-        "user1",
-        "room1",
+        username,
+        roomId,
         "AddStrokes",
         "whiteboard",
         strokesToAdd
@@ -48,8 +64,8 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
   const sendRemoveBoardMessage = (strokesToRemove: Stroke[]) => {
     send(
       new PolyboardMessage(
-        "user1",
-        "room1",
+        username,
+        roomId,
         "RemoveStrokes",
         "whiteboard",
         strokesToRemove
@@ -60,8 +76,8 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
   const sendUpdateBoardMessage = (strokesToUpdate: Stroke[]) => {
     send(
       new PolyboardMessage(
-        "user1",
-        "room1",
+        username,
+        roomId,
         "UpdateStrokes",
         "whiteboard",
         strokesToUpdate
@@ -71,7 +87,7 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
 
   const sendChatMessage = (chatMessage: ChatMessage) => {
     send(
-      new PolyboardMessage("user1", "room1", "NewMessage", "chat", [
+      new PolyboardMessage(username, roomId, "NewMessage", "chat", [
         chatMessage,
       ])
     );
@@ -105,9 +121,23 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
           break;
         case "RemoveStrokes":
           removeStrokes(msg.payload.map(buildStroke));
+          if (
+            msg.payload.some(
+              (s: any) => s.id in [...focusedStrokes].map((fs) => fs.id)
+            )
+          ) {
+            clearFocusedStrokes();
+          }
           break;
         case "UpdateStrokes":
           updateStrokes(msg.payload.map(buildStroke));
+          break;
+        case "FullState":
+          const initialStrokes = msg.payload.map(buildStroke);
+          const translatedInitialStrokes = await TranslateTextStrokes(
+            initialStrokes as TextStroke[]
+          );
+          setAllStrokes(translatedInitialStrokes);
           break;
       }
     } else if (msg.subsystem === "chat") {
@@ -125,6 +155,19 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
 
           const translatedMessages = await translateChatMessages(chatMessages);
           addMessages(translatedMessages);
+          break;
+        case "FullState":
+          const initialMessages = msg.payload.map(
+            (m: any) =>
+              new ChatMessage(
+                m.userName,
+                m.languageCode,
+                m.originalMessage,
+                m.translatedMessage
+              )
+          );
+
+          setAllMessages(initialMessages);
           break;
       }
     } else {
@@ -289,6 +332,7 @@ export const useWebSocket = (url: string = "ws://localhost:8000/ws") => {
     sendChatMessage,
     connectWebSocket,
     fullBatchTranslation,
+    sendInitializationMessage,
     disconnect: () => {
       const socket = getWebSocket();
       socket?.close();

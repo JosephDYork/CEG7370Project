@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Stroke } from "../models/strokes";
 
 interface EditorState {
+  loggedIn: boolean;
   brushTool: string;
   brushSize: number;
   brushColor: string;
@@ -12,9 +13,13 @@ interface EditorState {
   isSocketConnected: boolean;
   webSocket: WebSocket | null;
   currentLanguage: string;
+  username: string;
+  roomId: string;
 }
 
 interface EditorActions {
+  getIsLoggedIn: () => boolean;
+  setIsLoggedIn: (isLoggedIn: boolean) => void;
   setBrushTool: (brushTool: string) => void;
   setBrushSize: (brushSize: number) => void;
   setBrushColor: (brushColor: string) => void;
@@ -32,10 +37,13 @@ interface EditorActions {
   getIsSocketConnected: () => boolean;
   setCurrentLanguage: (language: string) => void;
   getCurrentLanguage: () => string;
+  setUsername: (username: string) => void;
+  setRoomId: (roomId: string) => void;
 }
 
 export const useEditorStore = create<EditorState & EditorActions>(
   (set, get) => ({
+    loggedIn: false,
     brushTool: "pen",
     brushSize: 2,
     brushColor: "#000000",
@@ -46,6 +54,18 @@ export const useEditorStore = create<EditorState & EditorActions>(
     isSocketConnected: false,
     webSocket: null,
     currentLanguage: "en",
+    username: "",
+    roomId: "",
+
+    getIsLoggedIn: () => {
+      return get().loggedIn;
+    },
+
+    setIsLoggedIn: (isLoggedIn) =>
+      set((state) => ({
+        ...state,
+        loggedIn: isLoggedIn,
+      })),
 
     setBrushTool: (brushTool) =>
       set((state) => ({
@@ -141,5 +161,16 @@ export const useEditorStore = create<EditorState & EditorActions>(
     getCurrentLanguage: () => {
       return get().currentLanguage;
     },
-  })
-);
+
+    setUsername: (username) =>
+      set((state) => ({
+        ...state,
+        username,
+      })),
+
+    setRoomId: (roomId) =>
+      set((state) => ({
+        ...state,
+        roomId,
+      })),
+    }));
