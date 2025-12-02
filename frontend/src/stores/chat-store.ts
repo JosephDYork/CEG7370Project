@@ -25,14 +25,15 @@ interface ChatState {
 }
 
 interface ChatActions {
-  overwriteState: (chatState: ChatState) => void;
   setRoomId: (roomId: string) => void;
-  addMessage: (message: ChatMessage) => void;
-  removeMessage: (index: number) => void;
-  clearMessages: () => void;
+  overwriteState: (chatState: ChatState) => void;
+  addMessages: (messages: ChatMessage[]) => void;
+  removeMessages: (index: number[]) => void;
+  getAllMessages: () => ChatMessage[];
+  setAllMessages: (messages: ChatMessage[]) => void;
 }
 
-export const useChatStore = create<ChatState & ChatActions>((set) => ({
+export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   roomId: "",
   messages: [],
 
@@ -46,21 +47,25 @@ export const useChatStore = create<ChatState & ChatActions>((set) => ({
       roomId,
     })),
 
-  addMessage: (message) =>
+  addMessages: (messages) =>
     set((state) => ({
       ...state,
-      messages: [...state.messages, message],
+      messages: [...state.messages, ...messages],
     })),
 
-  removeMessage: (index) =>
+  removeMessages: (indices) =>
     set((state) => ({
       ...state,
-      messages: state.messages.filter((_, i) => i !== index),
+      messages: state.messages.filter((_, idx) => !indices.includes(idx)),
     })),
 
-  clearMessages: () =>
+  setAllMessages: (messages) =>
     set((state) => ({
       ...state,
-      messages: [],
+      messages: messages,
     })),
+
+  getAllMessages: () => {
+    return get().messages;
+  },
 }));

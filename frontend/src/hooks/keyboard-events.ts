@@ -26,7 +26,9 @@ export const useKeyboardEvents = () => {
       textStroke.color,
       textStroke.size,
       textStroke.position,
-      text
+      text,
+      textStroke.srcLang,
+      textStroke.translations
     );
     setCurrentStroke(updatedStroke);
   };
@@ -43,14 +45,14 @@ export const useKeyboardEvents = () => {
         }
         break;
       case "Backspace":
-        updateTextStroke(textStroke.text.slice(0, -1));
+        updateTextStroke(textStroke.srcText.slice(0, -1));
         break;
       case "Escape":
         setCurrentStroke(null);
         break;
       default:
         if (key.length === 1) {
-          updateTextStroke(textStroke.text + key);
+          updateTextStroke(textStroke.srcText + key);
         }
         break;
     }

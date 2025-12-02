@@ -25,7 +25,7 @@ function freeStrokeToSVG(stroke: FreeStroke): string {
  */
 function textStrokeToSVG(stroke: TextStroke): string {
   const [x, y] = stroke.position;
-  const escapedText = stroke.text
+  const escapedText = stroke.srcText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

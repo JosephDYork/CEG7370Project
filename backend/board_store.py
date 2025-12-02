@@ -17,7 +17,9 @@ class TextStroke(BaseModel):
     color: str
     size: float
     position: List[float]
-    text: str
+    srcText: str
+    srcLang: str
+    translations: dict
 
 
 class LineStroke(BaseModel):

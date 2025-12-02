@@ -35,6 +35,7 @@ export const useMouseEvents = (
     setCurrentStroke,
     clearFocusedStrokes,
     clearEraseStack,
+    getCurrentLanguage
   } = useEditorStore();
   const { isDown, updateCursor, setCursorPosition, setCursorDown } =
     useCursorStore();
@@ -58,7 +59,7 @@ export const useMouseEvents = (
       finalStroke = stroke.simplify(); // Optional: pass epsilon here
     }
 
-    
+
     addStrokes([finalStroke]);
     sendAddBoardMessage([finalStroke]);
 
@@ -74,7 +75,15 @@ export const useMouseEvents = (
       case "pen":
         return new FreeStroke(strokeId, brushColor, brushSize, [[x, y]]);
       case "text":
-        return new TextStroke(strokeId, brushColor, brushSize * 10, [x, y], "");
+        return new TextStroke(
+          strokeId, 
+          brushColor, 
+          brushSize * 10, 
+          [x, y], 
+          "",
+          getCurrentLanguage(),
+          {}
+        );
       case "line":
         return new LineStroke(strokeId, brushColor, brushSize, [x, y], [x, y]);
       case "square":

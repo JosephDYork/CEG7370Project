@@ -3,7 +3,9 @@ import type { Stroke, Point, BoundingBox } from "./strokes";
 export interface ITextStroke extends Stroke {
   size: number;
   position: Point;
-  text: string;
+  srcText: string;
+  srcLang: string;
+  translations: Record<string, string>;
 }
 
 export class TextStroke implements ITextStroke {
@@ -12,20 +14,26 @@ export class TextStroke implements ITextStroke {
   color: string;
   size: number;
   position: Point;
-  text: string;
+  srcText: string;
+  srcLang: string;
+  translations: Record<string, string>;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     fontSize: number,
     position: Point,
-    text: string = ""
+    srcText: string,
+    srcLang: string,
+    translations: Record<string, string>
   ) {
     this.id = strokeId;
     this.color = strokeColor;
     this.size = fontSize;
     this.position = position;
-    this.text = text;
+    this.srcText = srcText;
+    this.srcLang = srcLang;
+    this.translations = translations;
   }
 
   getCentroid(): Point {
@@ -37,7 +45,7 @@ export class TextStroke implements ITextStroke {
     const ctx = tempCanvas.getContext("2d");
 
     ctx!.font = `${this.size}px Arial`;
-    const textWidth = ctx!.measureText(this.text).width;
+    const textWidth = ctx!.measureText(this.srcText).width;
 
     return [
       this.position[0],
@@ -62,7 +70,9 @@ export class TextStroke implements ITextStroke {
       updates.color ?? this.color,
       updates.size ?? this.size,
       this.position,
-      this.text
+      this.srcText,
+      this.srcLang,
+      this.translations
     );
   }
 }

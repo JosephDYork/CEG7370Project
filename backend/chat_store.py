@@ -13,3 +13,8 @@ class ChatMessage(BaseModel):
 class ChatState(BaseModel):
     roomId: str = ""
     messages: List[ChatMessage] = []
+
+    def add_message(self, message: ChatMessage):
+        self.messages.append(message)
+
+        return [message]

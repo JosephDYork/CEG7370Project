@@ -101,7 +101,7 @@ const Whiteboard = () => {
     ) {
       const magicBox = currentStroke as ShapeStroke;
       ctx.save();
-      
+
       // Draw dashed red border
       ctx.strokeStyle = "#FF6B6B";
       ctx.lineWidth = 2;
@@ -112,7 +112,7 @@ const Whiteboard = () => {
         magicBox.termination[0] - magicBox.origin[0],
         magicBox.termination[1] - magicBox.origin[1]
       );
-      
+
       // Draw semi-transparent fill
       ctx.fillStyle = "rgba(255, 107, 107, 0.1)";
       ctx.fillRect(
@@ -121,7 +121,7 @@ const Whiteboard = () => {
         magicBox.termination[0] - magicBox.origin[0],
         magicBox.termination[1] - magicBox.origin[1]
       );
-      
+
       ctx.restore();
     }
 
@@ -132,7 +132,8 @@ const Whiteboard = () => {
             ctx,
             stroke as TextStroke,
             [...editorState.focusedStrokes],
-            [...editorState.eraseStack]
+            [...editorState.eraseStack],
+            editorState.getCurrentLanguage()
           );
           break;
         case "free":
@@ -183,11 +184,11 @@ const Whiteboard = () => {
       ctx.strokeStyle = "#000000";
 
       ctx.moveTo(
-        textStroke.position[0] + ctx.measureText(textStroke.text).width + 2,
+        textStroke.position[0] + ctx.measureText(textStroke.srcText).width + 2,
         textStroke.position[1] + 2
       );
       ctx.lineTo(
-        textStroke.position[0] + ctx.measureText(textStroke.text).width + 2,
+        textStroke.position[0] + ctx.measureText(textStroke.srcText).width + 2,
         textStroke.position[1] - textStroke.size + 3
       );
       ctx.stroke();

@@ -1,7 +1,6 @@
 import "./header.css";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
-import { useTranslationStore } from "../../stores/translation-store";
 import { useViewportStore } from "../../stores/viewport-store";
 import { useUndoRedo } from "../../hooks/undo-redo";
 import { exportWhiteboardToSVG } from "../../utils/svg-export";
@@ -14,13 +13,9 @@ const getFocusedButtonClass = (bool: boolean) => {
 const Header = () => {
   const viewport = useViewportStore();
   const { strokes, removeStrokes } = useBoardStore();
-  const { brushTool, setBrushTool } = useEditorStore();
-  const targetLanguage = useTranslationStore((state) => state.targetLanguage);
+  const { brushTool, setBrushTool, getCurrentLanguage, setCurrentLanguage } = useEditorStore();
   const { handleUndo, handleRedo } = useUndoRedo();
-  const { sendRemoveBoardMessage } = useWebSocket();
-  const setTargetLanguage = useTranslationStore(
-    (state) => state.setTargetLanguage
-  );
+  const { fullBatchTranslation, sendRemoveBoardMessage } = useWebSocket();
 
   const handleResetView = () => {
     viewport.resetViewport();
@@ -106,11 +101,22 @@ const Header = () => {
         <div className="header-language-section">
           <select
             className="header-language-select"
-            value={targetLanguage}
-            onChange={(e) => setTargetLanguage(e.target.value)}
+            value={getCurrentLanguage()}
+            onChange={(e) => {
+              setCurrentLanguage(e.target.value);
+              fullBatchTranslation();
+            }}
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="it">Italian</option>
+            <option value="sv">Swedish</option>
+            <option value="de">German</option>
+            <option value="ja">Japanese</option>
+            <option value="kr">Korean</option>
+            <option value="hi">Hindi</option>
+            <option value="th">Thai</option>
           </select>
         </div>
       </div>
