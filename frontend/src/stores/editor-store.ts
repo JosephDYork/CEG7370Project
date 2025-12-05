@@ -6,6 +6,8 @@ interface EditorState {
   brushTool: string;
   brushSize: number;
   brushColor: string;
+  brushFillColor: string;
+  currentTopStrokeNumber: number;
   currentStroke: Stroke | null;
   eraseStack: Set<Stroke>;
   focusedStrokes: Set<Stroke>;
@@ -23,6 +25,8 @@ interface EditorActions {
   setBrushTool: (brushTool: string) => void;
   setBrushSize: (brushSize: number) => void;
   setBrushColor: (brushColor: string) => void;
+  setBrushFillColor: (brushFillColor: string) => void;
+  setCurrentTopStrokeNumber: (number: number) => void;
   setCurrentStroke: (stroke: Stroke | null) => void;
   addFocusedStroke: (stroke: Stroke) => void;
   clearFocusedStrokes: () => void;
@@ -47,6 +51,8 @@ export const useEditorStore = create<EditorState & EditorActions>(
     brushTool: "pen",
     brushSize: 2,
     brushColor: "#000000",
+    brushFillColor: "#FFFFFF",
+    currentTopStrokeNumber: 0,
     currentStroke: null,
     eraseStack: new Set(),
     focusedStrokes: new Set(),
@@ -83,6 +89,18 @@ export const useEditorStore = create<EditorState & EditorActions>(
       set((state) => ({
         ...state,
         brushColor,
+      })),
+
+    setBrushFillColor: (brushFillColor) =>
+      set((state) => ({
+        ...state,
+        brushFillColor,
+      })),
+
+    setCurrentTopStrokeNumber: (number) =>
+      set((state) => ({
+        ...state,
+        currentTopStrokeNumber: number,
       })),
 
     setCurrentStroke: (stroke) =>

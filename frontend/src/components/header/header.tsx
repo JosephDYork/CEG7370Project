@@ -133,7 +133,7 @@ const Header = () => {
           onClick={handleExportSVG}
           title="Export whiteboard as SVG"
         >
-          Export PDF
+          Export SVG
         </button>
       </div>
     </div>

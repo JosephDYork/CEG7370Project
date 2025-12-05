@@ -28,8 +28,10 @@ export const useSelectionTool = () => {
       "#0000FF",
       2,
       "square",
+      "#0000FF22",
       coords,
-      coords
+      coords,
+      Number.MAX_SAFE_INTEGER
     );
     setCurrentStroke(selectBox);
     return selectBox;

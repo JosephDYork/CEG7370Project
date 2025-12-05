@@ -7,8 +7,8 @@ import "./toolspanel.css";
 
 const ToolsPanel = () => {
   const { sendUpdateBoardMessage } = useWebSocket();
-  const { updateStrokes } = useBoardStore();
-  const { brushTool, focusedStrokes, clearFocusedStrokes, addFocusedStroke, setBrushColor, setBrushSize } = useEditorStore();
+  const { strokes,updateStrokes } = useBoardStore();
+  const { brushTool, focusedStrokes, brushColor, brushSize, brushFillColor, setCurrentTopStrokeNumber, clearFocusedStrokes, addFocusedStroke, setBrushColor, setBrushSize, setBrushFillColor } = useEditorStore();
   const debouncedUpdate = useMemo(() => debounce(sendUpdateBoardMessage, 100), [sendUpdateBoardMessage]);
 
   // We might want to just consider debouncing the whole function here tbh.
@@ -45,6 +45,40 @@ const ToolsPanel = () => {
     newStrokes.forEach((stroke) => addFocusedStroke(stroke));
   };
 
+  const onBrushFillColorChange = (event: React.FormEvent<HTMLInputElement>) => {
+    const color = event.currentTarget.value;
+
+    setBrushFillColor(color);
+    const newStrokes = [...focusedStrokes].map((stroke) => stroke.withUpdates({ fillColor: color }));
+    updateStrokes(newStrokes);
+    debouncedUpdate(newStrokes);
+
+    clearFocusedStrokes();
+    newStrokes.forEach((stroke) => addFocusedStroke(stroke));
+  };
+
+  const sendStrokesToFront = () => {
+    const maxStrokeOrder = Math.max(...strokes.map(s => s.strokeOrder));
+
+    setCurrentTopStrokeNumber(maxStrokeOrder + 1);
+    const newStrokes = [...focusedStrokes].map(
+      (stroke) => stroke.withUpdates({ strokeOrder: maxStrokeOrder + 1 })
+    );
+
+    updateStrokes(newStrokes);
+    sendUpdateBoardMessage(newStrokes);
+  }
+
+  const sendStrokesToBack = () => {
+    const minStrokeOrder = Math.min(...strokes.map(s => s.strokeOrder));
+    const newStrokes = [...focusedStrokes].map(
+      (stroke) => stroke.withUpdates({ strokeOrder: minStrokeOrder - 1 })
+    );
+
+    updateStrokes(newStrokes);
+    sendUpdateBoardMessage(newStrokes);
+  }
+
   const isToolbarVisible = () => {
     return (
       brushTool !== "pan" &&
@@ -63,7 +97,14 @@ const ToolsPanel = () => {
           type="color"
           className="color-picker"
           onInput={onBrushColorChange}
-          defaultValue={"#000000"}
+          defaultValue={brushColor}
+        />
+        <p>Fill Color:</p>
+        <input
+          type="color"
+          className="color-picker"
+          onInput={onBrushFillColorChange}
+          defaultValue={brushFillColor}
         />
         <p>Brush Size:</p>
         <input
@@ -72,10 +113,20 @@ const ToolsPanel = () => {
           max="10"
           className="brush-size-slider"
           onInput={onBrushSizeChange}
-          defaultValue={2}
+          defaultValue={brushSize}
         />
-        <div className="math-symbols-grid">
-        </div>
+        <button 
+          className="send-to-front-button"
+          onClick={sendStrokesToFront}
+          >
+            Send to front
+        </button>
+        <button 
+          className="send-to-front-button"
+          onClick={sendStrokesToBack}
+          >
+            Send to back
+        </button>
       </div>
     )
   );

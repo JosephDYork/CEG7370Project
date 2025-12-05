@@ -8,7 +8,8 @@ import { useWebSocket } from "../../hooks/web-sockets";
 const ChatPanel = () => {
   const { sendChatMessage } = useWebSocket();
   const { getCurrentLanguage, username } = useEditorStore();
-  const {messages, addMessages, removeMessages } = useChatStore();
+  const { messages, addMessages, removeMessages } = useChatStore();
+  const { currentLanguage } = useEditorStore();
 
   const [text, setText] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -26,7 +27,7 @@ const ChatPanel = () => {
     setText("");
 
     try {
-      const resp = await fetch("/translate", {
+      const resp = await fetch("http://localhost:8000/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +93,7 @@ const ChatPanel = () => {
                 userName={msg.userName}
                 languageCode={msg.languageCode}
                 originalMessage={msg.originalMessage}
-                translatedMessage={msg.translatedMessage}
+                translatedMessage={msg.languageCode === currentLanguage ?  msg.originalMessage : msg.translatedMessage}
               />
             ))}
           </div>

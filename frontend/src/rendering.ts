@@ -130,13 +130,26 @@ export const renderSelectionBox = (
   ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 };
 
+export const renderMagicBox = (
+  ctx: CanvasRenderingContext2D,
+  stroke: ShapeStroke
+) => {
+  const [x1, y1] = stroke.origin;
+  const [x2, y2] = stroke.termination;
+  ctx.strokeStyle = "rgba(255, 107, 107, 1)";
+  ctx.lineWidth = 4;
+  ctx.fillStyle = "rgba(255, 107, 107, 0.1)";
+  ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+  ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+};
+
 export const renderShapeStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: ShapeStroke,
   focusedStrokes: Stroke[],
   erasingStrokes: Stroke[]
 ) => {
-  if (stroke.id === "selectbox") return;
+  if (stroke.id === "selectbox" || stroke.id === "magicbox") return;
 
   ctx.beginPath();
   const [x1, y1] = stroke.origin;
@@ -148,12 +161,17 @@ export const renderShapeStroke = (
     case "square":
       ctx.lineWidth = stroke.size;
       ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
-      ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+      ctx.fillStyle = stroke.fillColor;
+      ctx.roundRect(x1, y1, x2 - x1, y2 - y1, 10);
+      ctx.fill();
+      ctx.stroke();
       break;
     case "ellipse":
       ctx.lineWidth = stroke.size;
       ctx.strokeStyle = getPendingEraseStrokeStyle(stroke, erasingStrokes);
+      ctx.fillStyle = stroke.fillColor;
       ctx.ellipse(centerX, centerY, w / 2, h / 2, 0, 0, 2 * Math.PI);
+      ctx.fill();
       ctx.stroke();
       break;
   }

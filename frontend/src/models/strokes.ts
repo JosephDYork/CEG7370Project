@@ -6,6 +6,7 @@ export interface Stroke {
   color: string;
   size: number;
   type: string;
+  strokeOrder: number;
   getCentroid(): Point;
   getBoundingBox(): BoundingBox;
   isPointNear(
@@ -13,5 +14,5 @@ export interface Stroke {
     tolerance?: number,
     ctx?: CanvasRenderingContext2D
   ): boolean;
-  withUpdates(updates: { color?: string; size?: number }): Stroke;
+  withUpdates(updates: { color?: string; fillColor?: string; strokeOrder?: number; size?: number }): Stroke;
 }

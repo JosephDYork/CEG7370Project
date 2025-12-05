@@ -18,6 +18,7 @@ export class TextStroke implements ITextStroke {
   srcText: string;
   srcLang: string;
   translations: Record<string, string>;
+  strokeOrder: number;
 
   constructor(
     strokeId: string,
@@ -26,7 +27,8 @@ export class TextStroke implements ITextStroke {
     position: Point,
     srcText: string,
     srcLang: string,
-    translations: Record<string, string>
+    translations: Record<string, string>,
+    strokeOrder: number
   ) {
     this.id = strokeId;
     this.color = strokeColor;
@@ -35,6 +37,7 @@ export class TextStroke implements ITextStroke {
     this.srcText = srcText;
     this.srcLang = srcLang;
     this.translations = translations;
+    this.strokeOrder = strokeOrder;
   }
 
   getCentroid(): Point {
@@ -71,7 +74,7 @@ export class TextStroke implements ITextStroke {
     return x >= x1 && x <= x2 && y >= y1 && y <= y2;
   }
 
-  withUpdates(updates: { color?: string; size?: number }): TextStroke {
+  withUpdates(updates: { color?: string; size?: number; strokeOrder?: number }): TextStroke {
     return new TextStroke(
       this.id,
       updates.color ?? this.color,
@@ -79,7 +82,8 @@ export class TextStroke implements ITextStroke {
       this.position,
       this.srcText,
       this.srcLang,
-      this.translations
+      this.translations,
+      updates.strokeOrder ?? this.strokeOrder
     );
   }
 }

@@ -13,36 +13,39 @@ export class LineStroke implements ILineStroke {
   size: number;
   startPoint: Point;
   endPoint: Point;
+  strokeOrder: number;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     strokeSize: number,
     startPoint: Point,
-    endPoint: Point
+    endPoint: Point,
+    strokeOrder: number,
   ) {
     this.id = strokeId;
     this.color = strokeColor;
     this.size = strokeSize;
     this.startPoint = startPoint;
     this.endPoint = endPoint;
+    this.strokeOrder = strokeOrder;
   }
 
-  withUpdates(updates: { color?: string; size?: number }): LineStroke {
+  withUpdates(updates: { color?: string; size?: number, strokeOrder?: number }): LineStroke {
     return new LineStroke(
       this.id,
       updates.color ?? this.color,
       updates.size ?? this.size,
       this.startPoint,
-      this.endPoint
+      this.endPoint,
+      updates.strokeOrder ?? this.strokeOrder
     );
   }
 
   updateEndPoint(x: number, y: number): LineStroke {
-    return new LineStroke(this.id, this.color, this.size, this.startPoint, [
-      x,
-      y,
-    ]);
+    return new LineStroke(this.id, this.color, this.size, this.startPoint, 
+      [ x, y, ], this.strokeOrder
+    );
   }
 
   getCentroid(): Point {

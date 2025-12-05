@@ -15,7 +15,7 @@ import {
 } from "../rendering";
 
 export const useMagicBoxTool = () => {
-  const { brushTool, getCurrentLanguage } = useEditorStore();
+  const { brushTool, currentTopStrokeNumber, getCurrentLanguage } = useEditorStore();
   const { strokes, addStrokes, removeStrokes } = useBoardStore();
   const { sendAddBoardMessage, sendRemoveBoardMessage } = useWebSocket();
   const { 
@@ -33,15 +33,17 @@ export const useMagicBoxTool = () => {
     if (brushTool !== "magicbox") {
       return null;
     }
-    
+
     setMagicBoxExists(true);
     const magicBox = new ShapeStroke(
       "magicbox",
       "#FF6B6B",
       3,
       "square",
+      "#FF6B6B",
       coords,
-      coords
+      coords,
+      Number.MAX_SAFE_INTEGER
     );
     return magicBox;
   };
@@ -67,7 +69,7 @@ export const useMagicBoxTool = () => {
       const [minX, minY, maxX, maxY] = bbox;
       const width = maxX - minX;
       const height = maxY - minY;
-      
+
       setProgress({ status: "Rendering region...", progress: 0.2 });
 
       // Create a temporary canvas for the selected region
@@ -93,7 +95,7 @@ export const useMagicBoxTool = () => {
         return !(sMaxX < minX || sMinX > maxX || sMaxY < minY || sMinY > maxY);
       });
 
-      for (const stroke of strokesInRegion) {
+      for (const stroke of strokesInRegion.sort((a, b) => a.strokeOrder - b.strokeOrder)) {
         switch (stroke.type) {
           case "free":
             renderFreeStroke(ctx, stroke as FreeStroke, [], []);
@@ -136,7 +138,7 @@ export const useMagicBoxTool = () => {
         reader.readAsDataURL(blob);
       });
 
-      const response = await fetch("/ocr", {
+      const response = await fetch("http://localhost:8000/ocr", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +166,8 @@ export const useMagicBoxTool = () => {
             [worldX, worldY],
             block.text,
             getCurrentLanguage(),
-            {}
+            {},
+            currentTopStrokeNumber + 1
         );
       });
 
@@ -172,8 +175,12 @@ export const useMagicBoxTool = () => {
 
       // Remove original strokes from the region
       if (strokesInRegion.length > 0) {
-        removeStrokes(strokesInRegion);
-        sendRemoveBoardMessage(strokesInRegion);
+        const strokesToRemove = strokesInRegion.filter(
+          s => s.type === "free" || s.type === "line" || s.type === "text"
+        );
+
+        removeStrokes(strokesToRemove);
+        sendRemoveBoardMessage(strokesToRemove);
       }
 
       // Add new text strokes
@@ -204,13 +211,13 @@ export const useMagicBoxTool = () => {
     magicBox: ShapeStroke | null
   ): Promise<void> => {
     setMagicBoxExists(false);
-    
+
     if (!magicBox) return;
 
     // Validate magic box size (minimum 5x5 world units)
     const width = Math.abs(magicBox.termination[0] - magicBox.origin[0]);
     const height = Math.abs(magicBox.termination[1] - magicBox.origin[1]);
-    
+
     if (width < 5 || height < 5) {
       return;
     }

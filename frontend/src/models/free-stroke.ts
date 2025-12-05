@@ -95,24 +95,25 @@ export class FreeStroke implements IFreeStroke {
   color: string;
   size: number;
   points: Point[];
+  strokeOrder: number;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     size: number,
-    points: Point[] = []
+    points: Point[] = [],
+    strokeOrder: number
   ) {
     this.id = strokeId;
     this.color = strokeColor;
     this.size = size;
     this.points = points;
+    this.strokeOrder = strokeOrder;
   }
 
   addPoint(x: number, y: number): FreeStroke {
-    return new FreeStroke(this.id, this.color, this.size, [
-      ...this.points,
-      [x, y],
-    ]);
+    return new FreeStroke(this.id, this.color, this.size,
+      [ ...this.points, [x, y], ], this.strokeOrder);
   }
 
   /**
@@ -143,7 +144,8 @@ export class FreeStroke implements IFreeStroke {
       this.id,
       this.color,
       this.size,
-      simplifiedPoints
+      simplifiedPoints,
+      this.strokeOrder
     );
   }
 
@@ -206,12 +208,13 @@ export class FreeStroke implements IFreeStroke {
     });
   }
 
-  withUpdates(updates: { color?: string; size?: number }): FreeStroke {
+  withUpdates(updates: { color?: string; size?: number; strokeOrder?: number }): FreeStroke {
     return new FreeStroke(
       this.id,
       updates.color ?? this.color,
       updates.size ?? this.size,
-      this.points
+      this.points,
+      updates.strokeOrder ?? this.strokeOrder
     );
   }
 }

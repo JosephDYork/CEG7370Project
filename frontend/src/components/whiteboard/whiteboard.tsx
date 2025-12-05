@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useBoardStore } from "../../stores/board-store";
 import { useEditorStore } from "../../stores/editor-store";
 import { useViewportStore } from "../../stores/viewport-store";
@@ -14,16 +14,15 @@ import {
   renderLineStroke,
   renderShapeStroke,
   renderSelectionBox,
+  renderMagicBox,
 } from "../../rendering";
 import "./whiteboard.css";
 
 const GRID_SIZE = 20;
 const GRID_COLOR = "rgba(0, 0, 0, 0.1)";
-const CURSOR_BLINK_SPEED = 500; // milliseconds
 
 const Whiteboard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showCursor, setShowCursor] = useState(true);
   const boardState = useBoardStore((state) => state);
   const editorState = useEditorStore((state) => state);
   const viewportState = useViewportStore((state) => state);
@@ -83,49 +82,8 @@ const Whiteboard = () => {
 
     // Draw grid and content in world space
     drawGrid(ctx);
-    drawTextCursor();
 
-    if (
-      currentStroke &&
-      currentStroke.type === "shape" &&
-      currentStroke.id === "selectbox"
-    ) {
-      renderSelectionBox(ctx, currentStroke as ShapeStroke);
-    }
-
-    // Render Magic Box with special styling
-    if (
-      currentStroke &&
-      currentStroke.type === "shape" &&
-      currentStroke.id === "magicbox"
-    ) {
-      const magicBox = currentStroke as ShapeStroke;
-      ctx.save();
-
-      // Draw dashed red border
-      ctx.strokeStyle = "#FF6B6B";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 5]);
-      ctx.strokeRect(
-        magicBox.origin[0],
-        magicBox.origin[1],
-        magicBox.termination[0] - magicBox.origin[0],
-        magicBox.termination[1] - magicBox.origin[1]
-      );
-
-      // Draw semi-transparent fill
-      ctx.fillStyle = "rgba(255, 107, 107, 0.1)";
-      ctx.fillRect(
-        magicBox.origin[0],
-        magicBox.origin[1],
-        magicBox.termination[0] - magicBox.origin[0],
-        magicBox.termination[1] - magicBox.origin[1]
-      );
-
-      ctx.restore();
-    }
-
-    for (const stroke of allStrokes) {
+    for (const stroke of allStrokes.sort((a, b) => a.strokeOrder - b.strokeOrder)) {
       switch (stroke.type) {
         case "text":
           renderTextStroke(
@@ -163,36 +121,24 @@ const Whiteboard = () => {
       }
     }
 
-    ctx.restore();
-  };
-
-  const drawTextCursor = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Could not get canvas context");
-
     if (
-      editorState.currentStroke &&
-      editorState.currentStroke.type === "text" &&
-      showCursor
+      currentStroke &&
+      currentStroke.type === "shape" &&
+      currentStroke.id === "selectbox"
     ) {
-      const textStroke = editorState.currentStroke as TextStroke;
-      ctx.beginPath();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "#000000";
-
-      ctx.moveTo(
-        textStroke.position[0] + ctx.measureText(textStroke.srcText).width + 2,
-        textStroke.position[1] + 2
-      );
-      ctx.lineTo(
-        textStroke.position[0] + ctx.measureText(textStroke.srcText).width + 2,
-        textStroke.position[1] - textStroke.size + 3
-      );
-      ctx.stroke();
+      renderSelectionBox(ctx, currentStroke as ShapeStroke);
     }
+
+    // Render Magic Box with special styling
+    if (
+      currentStroke &&
+      currentStroke.type === "shape" &&
+      currentStroke.id === "magicbox"
+    ) {
+      renderMagicBox(ctx, currentStroke as ShapeStroke);
+    }
+
+    ctx.restore();
   };
 
   // Infinite grid that moves with the viewport
@@ -241,22 +187,7 @@ const Whiteboard = () => {
     if (!ctx) throw new Error("Could not get canvas context");
 
     drawCanvas();
-  }, [boardState, editorState, showCursor, viewportState]);
-
-  useEffect(() => {
-    if (
-      editorState.currentStroke &&
-      editorState.currentStroke.type === "text"
-    ) {
-      const intervalId = setInterval(() => {
-        setShowCursor((prev) => !prev);
-      }, CURSOR_BLINK_SPEED);
-
-      return () => clearInterval(intervalId);
-    } else {
-      setShowCursor(true);
-    }
-  }, [editorState]);
+  }, [boardState, editorState, viewportState]);
 
   return (
     <div className="whiteboard-container">

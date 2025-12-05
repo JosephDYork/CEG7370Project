@@ -14,34 +14,42 @@ export class ShapeStroke implements IShapeStroke {
   id: string;
   shapeType: ShapeType;
   color: string;
+  fillColor: string;
   size: number;
   origin: Point;
   termination: Point;
+  strokeOrder: number;
 
   constructor(
     strokeId: string,
     strokeColor: string,
     strokeSize: number,
     shapeType: ShapeType,
+    fillColor: string,
     origin: Point,
-    termination: Point
+    termination: Point,
+    strokeOrder: number
   ) {
     this.id = strokeId;
     this.shapeType = shapeType;
     this.color = strokeColor;
+    this.fillColor = fillColor;
     this.size = strokeSize;
     this.origin = origin;
     this.termination = termination;
+    this.strokeOrder = strokeOrder;
   }
 
-  withUpdates(updates: { color?: string; size?: number }): ShapeStroke {
+  withUpdates(updates: { color?: string; fillColor?: string; size?: number; strokeOrder?: number }): ShapeStroke {
     return new ShapeStroke(
       this.id,
       updates.color ?? this.color,
       updates.size ?? this.size,
       this.shapeType,
+      updates.fillColor ?? this.fillColor,
       this.origin,
-      this.termination
+      this.termination,
+      updates.strokeOrder ?? this.strokeOrder
     );
   }
 
@@ -51,8 +59,10 @@ export class ShapeStroke implements IShapeStroke {
       this.color,
       this.size,
       this.shapeType,
+      this.fillColor,
       this.origin,
-      [x, y]
+      [x, y],
+      this.strokeOrder
     );
   }
 

@@ -3,7 +3,7 @@ import type { FreeStroke } from "../models/free-stroke";
 import type { TextStroke } from "../models/text-stroke";
 import type { LineStroke } from "../models/line-stroke";
 import type { ShapeStroke } from "../models/shape-stroke";
-
+import  {useEditorStore} from "../stores/editor-store";
 /**
  * Converts a freehand stroke to an SVG path element
  */
@@ -24,8 +24,10 @@ function freeStrokeToSVG(stroke: FreeStroke): string {
  * Converts a text stroke to an SVG text element
  */
 function textStrokeToSVG(stroke: TextStroke): string {
+  const strokeText = (stroke.srcLang in stroke.translations) ? stroke.translations[useEditorStore.getState().currentLanguage] : stroke.srcText;
+
   const [x, y] = stroke.position;
-  const escapedText = stroke.srcText
+  const escapedText = strokeText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -57,13 +59,13 @@ function shapeStrokeToSVG(stroke: ShapeStroke): string {
   const y = Math.min(y1, y2);
 
   if (stroke.shapeType === "square") {
-    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="none" />`;
+    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="${stroke.fillColor}" />`;
   } else if (stroke.shapeType === "ellipse") {
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
     const rx = width / 2;
     const ry = height / 2;
-    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="none" />`;
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke.color}" stroke-width="${stroke.size}" fill="${stroke.fillColor}" />`;
   }
 
   return "";
@@ -140,6 +142,7 @@ export function exportToSVG(strokes: Stroke[]): string {
 
   const svgElements = strokes
     .filter((stroke) => stroke.id !== "selectbox") // Exclude selection box
+    .sort((a, b) => a.strokeOrder - b.strokeOrder)
     .map((stroke) => strokeToSVG(stroke))
     .filter((svg) => svg !== "")
     .join("\n  ");

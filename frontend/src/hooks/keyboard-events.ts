@@ -30,7 +30,8 @@ export const useKeyboardEvents = () => {
       textStroke.position,
       text,
       textStroke.srcLang,
-      textStroke.translations
+      textStroke.translations,
+      textStroke.strokeOrder
     );
     setCurrentStroke(updatedStroke);
   };
@@ -66,6 +67,7 @@ export const useKeyboardEvents = () => {
         removeStrokes([...focusedStrokes]);
         sendRemoveBoardMessage([...focusedStrokes])
         setCurrentStroke(null);
+        clearFocusedStrokes();
         break;
       case "Escape":
         clearFocusedStrokes();

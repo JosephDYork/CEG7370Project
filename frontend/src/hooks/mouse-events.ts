@@ -28,6 +28,8 @@ export const useMouseEvents = (
     brushTool,
     brushSize,
     brushColor,
+    brushFillColor,
+    currentTopStrokeNumber,
     currentStroke,
     focusedStrokes,
     eraseStack,
@@ -73,7 +75,7 @@ export const useMouseEvents = (
 
     switch (brushTool) {
       case "pen":
-        return new FreeStroke(strokeId, brushColor, brushSize, [[x, y]]);
+        return new FreeStroke(strokeId, brushColor, brushSize, [[x, y]], currentTopStrokeNumber + 1);
       case "text":
         return new TextStroke(
           strokeId, 
@@ -82,10 +84,11 @@ export const useMouseEvents = (
           [x, y], 
           "",
           getCurrentLanguage(),
-          {}
+          {},
+          currentTopStrokeNumber + 1
         );
       case "line":
-        return new LineStroke(strokeId, brushColor, brushSize, [x, y], [x, y]);
+        return new LineStroke(strokeId, brushColor, brushSize, [x, y], [x, y], currentTopStrokeNumber + 1);
       case "square":
       case "ellipse":
         return new ShapeStroke(
@@ -93,8 +96,10 @@ export const useMouseEvents = (
           brushColor,
           brushSize,
           brushTool,
+          brushFillColor,
           [x, y],
-          [x, y]
+          [x, y],
+          currentTopStrokeNumber + 1
         );
       case "select":
         return selection.startSelectBox([x, y]);
@@ -181,8 +186,10 @@ export const useMouseEvents = (
         "#000000",
         1,
         "ellipse",
+        "#ffffff01",
         [worldCoords[0] - 5, worldCoords[1] - 5],
-        [worldCoords[0] + 5, worldCoords[1] + 5]
+        [worldCoords[0] + 5, worldCoords[1] + 5],
+        Number.MAX_SAFE_INTEGER
       ))
     }
 
@@ -218,6 +225,14 @@ export const useMouseEvents = (
       canvasRef.current.style.cursor = "crosshair";
     }
 
+    if (brushTool === "text") {
+      canvasRef.current.style.cursor = "text";
+    }
+
+    if (brushTool === "erase") {
+      canvasRef.current.style.cursor = isErasing ? "none" : "default";
+    }
+
     // Handle selection hover (uses world coords)
     if (
       brushTool === "select" &&
@@ -230,7 +245,7 @@ export const useMouseEvents = (
       );
       if (strokeHovered !== hoveringTranslatable) {
         setHoveringTranslatable(strokeHovered);
-        canvasRef.current.style.cursor = strokeHovered ? "move" : "crosshair";
+        canvasRef.current.style.cursor = strokeHovered ? "move" : "default";
       }
     } else if (hoveringTranslatable) {
       setHoveringTranslatable(false);
@@ -254,8 +269,10 @@ export const useMouseEvents = (
         "#000000",
         1,
         "ellipse",
+        "#ffffff01",
         [worldCoords[0] - 5, worldCoords[1] - 5],
-        [worldCoords[0] + 5, worldCoords[1] + 5]
+        [worldCoords[0] + 5, worldCoords[1] + 5],
+        Number.MAX_SAFE_INTEGER
       ))
 
       return;

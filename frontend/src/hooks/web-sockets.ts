@@ -11,7 +11,7 @@ import { ShapeStroke } from "../models/shape-stroke";
 import { useChatStore } from "../stores/chat-store";
 import { attempt } from "lodash";
 
-export const useWebSocket = (url: string = "/ws") => {
+export const useWebSocket = (url: string = "http://localhost:8000/ws") => {
   const { addMessages, getAllMessages, setAllMessages } = useChatStore();
   const {
     addStrokes,
@@ -104,13 +104,13 @@ export const useWebSocket = (url: string = "/ws") => {
   const buildStroke = (s: any): Stroke => {
     switch (s.type) {
       case "free":
-        return new FreeStroke(s.id, s.color, s.size, s.points);
+        return new FreeStroke(s.id, s.color, s.size, s.points, s.strokeOrder);
       case "text":
-        return new TextStroke(s.id, s.color, s.size, s.position, s.srcText, s.srcLang, s.translations);
+        return new TextStroke(s.id, s.color, s.size, s.position, s.srcText, s.srcLang, s.translations, s.strokeOrder);
       case "line":
-        return new LineStroke(s.id, s.color, s.size, s.startPoint, s.endPoint);
+        return new LineStroke(s.id, s.color, s.size, s.startPoint, s.endPoint, s.strokeOrder);
       case "shape":
-        return new ShapeStroke(s.id, s.color, s.size, s.shapeType, s.origin, s.termination);
+        return new ShapeStroke(s.id, s.color, s.size, s.shapeType, s.fillColor, s.origin, s.termination, s.strokeOrder);
       default:
         throw new Error(`Unknown stroke type: ${s.type}`);
     }
@@ -229,7 +229,7 @@ export const useWebSocket = (url: string = "/ws") => {
 
     const promises = messages.map(async (message) => {
       if (message.languageCode !== currentLang) {
-        const response = await fetch("/translate", {
+        const response = await fetch("http://localhost:8000/translate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -278,7 +278,7 @@ export const useWebSocket = (url: string = "/ws") => {
     textStroke: TextStroke,
     targetLang: string
   ) => {
-    const response = await fetch("/translate", {
+    const response = await fetch("http://localhost:8000/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -296,7 +296,8 @@ export const useWebSocket = (url: string = "/ws") => {
       textStroke.position,
       textStroke.srcText,
       textStroke.srcLang,
-      { ...textStroke.translations, [targetLang]: data.translated_text }
+      { ...textStroke.translations, [targetLang]: data.translated_text },
+      textStroke.strokeOrder
     );
   };
 
@@ -322,6 +323,7 @@ export const useWebSocket = (url: string = "/ws") => {
 
     socket.onclose = () => {
       setIsSocketConnected(false);
+      attemptReconnectAndSync();
     };
 
     socket.onerror = (error) => {
