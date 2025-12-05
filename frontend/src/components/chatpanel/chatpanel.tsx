@@ -27,7 +27,7 @@ const ChatPanel = () => {
     setText("");
 
     try {
-      const resp = await fetch("http://localhost:8000/translate", {
+      const resp = await fetch("/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

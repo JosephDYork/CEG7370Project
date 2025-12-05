@@ -138,7 +138,7 @@ export const useMagicBoxTool = () => {
         reader.readAsDataURL(blob);
       });
 
-      const response = await fetch("http://localhost:8000/ocr", {
+      const response = await fetch("/ocr", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
