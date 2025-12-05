@@ -135,7 +135,6 @@ async def websocket_endpoint(websocket: WebSocket):
                                 new_message_payload,
                                 websocket,
                             )
-                            continue
 
             if (message.subsystem == "whiteboard"):
                 match message.type:
@@ -149,7 +148,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                 add_payload,
                                 websocket,
                             )
-                            continue
+
                     case "RemoveStrokes":
                         for stroke in message.payload:
                             remove_payload = board_state.removeStroke(stroke)
@@ -160,7 +159,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                 remove_payload,
                                 websocket,
                             )
-                            continue
+
                     case "UpdateStrokes":
                         for stroke in message.payload:
                             update_payload = board_state.updateStroke(stroke)
@@ -171,7 +170,6 @@ async def websocket_endpoint(websocket: WebSocket):
                                 update_payload,
                                 websocket,
                             )
-                            continue
 
     except WebSocketDisconnect:
         print("Client disconnected")
@@ -200,18 +198,13 @@ async def translate_text(req: TranslateRequest):
     """
     api_url = os.environ.get("TRANSLATE_API_URL")
 
-    if req.source_language == req.target_language:
-        return TranslateResponse(translated_text=req.text)
-
-
     if not api_url:
         translated = f"{req.text} [translated to {req.target_language}]"
         return TranslateResponse(translated_text=translated)
 
-    # LibreTranslate expects POST to /translate with json: {q, source, target, format}
     payload = {
         "q": req.text,
-        "source": getattr(req, "source_language", "auto"),
+        "source": "auto" if req.source_language == req.target_language else getattr(req, "source_language", "auto"),
         "target": req.target_language,
         "format": "text"
     }

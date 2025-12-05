@@ -9,6 +9,7 @@ class FreeStroke(BaseModel):
     color: str
     size: float
     points: List[List[float]]
+    strokeOrder: int
 
 
 class TextStroke(BaseModel):
@@ -20,6 +21,7 @@ class TextStroke(BaseModel):
     srcText: str
     srcLang: str
     translations: dict
+    strokeOrder: int
 
 
 class LineStroke(BaseModel):
@@ -29,6 +31,7 @@ class LineStroke(BaseModel):
     size: float
     startPoint: List[float]
     endPoint: List[float]
+    strokeOrder: int
 
 
 class ShapeStroke(BaseModel):
@@ -37,8 +40,10 @@ class ShapeStroke(BaseModel):
     shapeType: str
     color: str
     size: float
+    fillColor: str
     origin: List[float]
     termination: List[float]
+    strokeOrder: int
 
 
 class BoardState(BaseModel):
