@@ -11,5 +11,5 @@ dependencies = [
     "httpx>=0.24.0",
     "pillow>=12.0.0",
     "boto3>=1.41.5",
-    "python-dotenv>=1.2.1",
+    "python-dotenv>=1.2.2",
 ]
