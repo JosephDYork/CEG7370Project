@@ -9,7 +9,7 @@ dependencies = [
     "pydantic>=2.12.3",
     "uvicorn[standard]>=0.37.0",
     "httpx>=0.24.0",
-    "pillow>=12.0.0",
+    "pillow>=12.2.0",
     "boto3>=1.41.5",
     "python-dotenv>=1.2.1",
 ]
